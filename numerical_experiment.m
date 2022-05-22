@@ -1,19 +1,17 @@
-n = 100;
-diag_size = 13;
+n = 1000;
+d = 130;
 I = [1 n];
-% make binary tree.
+% make binary tree
 idx_tree = tree(I);
-idx_tree = create_children(idx_tree, 1, diag_size);
-%disp(idx_tree.tostring);
-% make a kernel.
+idx_tree = create_children(idx_tree,1,d);
+% make a kernel
 rbf = @(e,r) exp(-(e*r).^2); ep = 5; d = 1;
-% Points at which to sample.
-x = CreatePoints(n^d, d, 'u');
-%x = x(randperm(length(x)));
-% compute the absolute difference.
-DM = DistanceMatrix(x, x);
-% sample matrix.
-K = rbf(ep, DM);
+% Points at which to sample
+x = CreatePoints(n^d,d,'u');
+% compute the absolute difference
+DM = DistanceMatrix(x,x);
+% sample matrix
+K = rbf(ep,DM);
 
 % k = # of samples; approximately the rank of each small matrix
 k = 10; % what should this rank really be? We don't know 
@@ -23,25 +21,20 @@ t_order = idx_tree.breadthfirstiterator;
 it = 2;
 U_tree = idx_tree;
 Z_tree = idx_tree;
+tree_depth = log2(nnodes(idx_tree)+1) - 1;
+Omega = randn(n, 2*k);
 
-for l=1:3
-  % Omega = random matrix.
-  Omega = randn(n, 2*k);
+for l=1:tree_depth
   % l = generation in the tree
   thd = floor(n/(2^l));
   % make intervals (ints)
   ints = 1:thd:n+1;
-  % build mask
-  mask = 1:n;
-  for idx = 1:length(ints)-2
-    mask(ints(idx):ints(idx+1)-1) = mod(mask(ints(idx):ints(idx+1)-1) / thd, 2) == 0;
-  end
-% there is something wrong here.
-  mask = mask ~= 0; mask = [repmat(mask, k, 1); repmat(flip(mask), k, 1)];
-  % interlace
-  Omega = Omega .* mask';
-  % compute the sample matrix Y.
-  Y = K * Omega;
+  row = repmat([zeros(1,k) ones(1,k)], floor(n/(2^l)), 1);
+  row_flip = fliplr(row);
+  block = [row; row_flip];
+  mask = repmat(block, 2^(l-1), 1);
+  % compute sample matrix using interlaced random matrix.
+  Y = K * (Omega .* mask);
   % orthogonalize and separate into skinny matrices
   % populate tree with U and Z vectors.
   for idx = 1:length(ints)-1
