@@ -29,13 +29,11 @@ for l=1:tree_depth
   thd = floor(n/(2^l));
   % make intervals (ints)
   ints = 1:thd:n+1;
-  % build the first "row" of zeros and random values (Blue/white block in
+  % build the first block of zeros and random values (Blue/white block in
   % Fig 12a)
-  row = repmat([zeros(1,k) ones(1,k)], floor(n/(2^l)), 1);
-  % Flip the existing block and stack the two to form a "block"
+  row = repmat([zeros(1,k) ones(1,k)], floor(n/(2^l)), 1)
   row_flip = fliplr(row);
   block = [row; row_flip];
-  % keep stacking blocks 2^(l-1) times to form the entire mask
   mask = repmat(block, 2^(l-1), 1);
   % compute sample matrix using interlaced random matrix.
   Y = K * (Omega .* mask);
@@ -46,17 +44,13 @@ for l=1:tree_depth
     quotient = floor(ints(idx) / thd);
     % top diagonal K submatrices
     if mod(quotient, 2) == 0
-      % orthonormalize each green block in Fig 12a and place it in U_tree
       U_tree = U_tree.set(t_order(it), orth(Y(ints(idx):ints(idx+1)-1, 1:k)));
-      % Perform the operation in Fig 13 and store the result in Z_tree
       Z_tree = Z_tree.set(t_order(it), K(ints(idx):ints(idx+1)-1, ints(idx+1):ints(idx+2)-1)' * U_tree.get(t_order(it)));
       % zero out submatrices in K
       K(ints(idx):ints(idx+1)-1, ints(idx+1):ints(idx+2)-1) = 0;
     % bottom diagonal K submatrices
     else
-      % orthonormalize each green block in Fig 12a and place it in U_tree
       U_tree = U_tree.set(t_order(it), orth(Y(ints(idx):ints(idx)+thd-1, k+1:end)));
-      % Perform the operation in Fig 13 and store the result in Z_tree
       Z_tree = Z_tree.set(t_order(it), K(ints(idx):ints(idx+1)-1, ints(idx-1):ints(idx)-1)' * U_tree.get(t_order(it)));
       % zero out submatrices in K
       K(ints(idx):ints(idx+1)-1, ints(idx-1):ints(idx)-1) = 0;
@@ -64,7 +58,9 @@ for l=1:tree_depth
     it = it + 1;
   end
 end
-% check the accuracy.
+% fix the idx mismatch issue.
+%should you store the same U and Z at the same location in their
+%respective trees?
 K = rbf(ep, DM);
 for i = 3:2:length(idx_tree.breadthfirstiterator)
   idx = t_order(i-1);
@@ -74,13 +70,11 @@ for i = 3:2:length(idx_tree.breadthfirstiterator)
   x_idx
   y_idx
   true = K(x_idx(1):x_idx(2), y_idx(1):y_idx(2));
-  % MSE
   disp(norm(true - U_tree.get(idx) * (Z_tree.get(idx))', 'fro')^2 / numel(true))
   % lower triangle
   x_idx = idx_tree.get(idx_next); y_idx = idx_tree.get(idx);
   x_idx
   y_idx
   true = K(x_idx(1):x_idx(2), y_idx(1):y_idx(2));
-  % MSE
   disp(norm(true - U_tree.get(idx_next) * (Z_tree.get(idx_next))', 'fro')^2 / numel(true))
 end
