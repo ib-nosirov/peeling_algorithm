@@ -4,7 +4,7 @@
 n = 1000;
 d = 130;
 % k = # of samples; approximately the rank of each small matrix
-k = 5; % what should this rank really be? We don't know 
+k = 9; % what should this rank really be? We don't know 
 I = [1 n];
 % make binary tree
 idx_tree = tree(I);
@@ -58,8 +58,8 @@ omega(501:750,1:k) = 0; omega(751:1000,k+1:end) = 0;
 % create sample matrix
 Y = K_mtrx * omega;
 % orthogonalize the result
-U45 = U(1:250,1:k); U54 = U(251:500,k+1:end);
-U67 = U(501:750,1:k); U76 = U(751:1000,k+1:end);
+U45 = Y(1:250,1:k); U54 = Y(251:500,k+1:end);
+U67 = Y(501:750,1:k); U76 = Y(751:1000,k+1:end);
 
 %% B: temporary variable; often used to store 'B' values %%
 % subtract away the irrelevant interactions at previous levels

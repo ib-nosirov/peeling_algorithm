@@ -67,8 +67,6 @@ B = table(( U_tree.get(2) * Z_tree.get(2)' ) * omega(501:1000,1:k)).Var1(1:250,:
 U45 = orth(U45 - B); 
 
 B = table(( U_tree.get(2) * Z_tree.get(2)' ) * omega(501:1000,k+1:end)).Var1(251:end,:);
-size(U54)
-size(B)
 U54 = orth(U54 - B);
 
 B = table(( U_tree.get(3) * Z_tree.get(3)' ) * omega(1:500,1:k)).Var1(1:250,:);
