@@ -27,22 +27,24 @@ Z_tree = idx_tree;
 % create a random matrix
 omega = randn(n,2*k);
 % interlace random matrix 
-omega(1:500,1:k) = 0; omega(501:1000,k+1:end) = 0;
+omega(1:500,1:k) = 0; omega(501:end,k+1:end) = 0;
 % create sample matrix
 Y = K_mtrx * omega;
 % index the orthogonalized sample matrix for relevant blocks
-U23 = Y(1:500,1:k); U32 = Y(501:end,k+1:end);
+U23 = orth(Y(1:500,1:k)); U32 = orth(Y(501:end,k+1:end));
 % allocate space for a 'U' matrix
 U_mtrx = zeros(n,2*k);
 % interlace orthonormal U matrix
-U_mtrx(1:500,1:k) = orth(U23); U_mtrx(501:end,k+1:end) = orth(U32); 
+U_mtrx(1:500,k+1:end) = U23; U_mtrx(501:end,1:k) = U32; 
 % create the Z matrix
 Z_mtrx = K_mtrx' * U_mtrx;
 % retrieve the relevant blocks 
 Z23 = Z_mtrx(1:500,1:k); Z32 = Z_mtrx(501:end,k+1:end);
 
+disp(norm(K_mtrx(1:500,501:end) - (U23 * Z23'), 'fro')^2 / numel(K_mtrx(1:500,501:end)))
+return
 % K23
-U_tree = U_tree.set(2,Z23);
+U_tree = U_tree.set(2,U23);
 Z_tree = Z_tree.set(2,Z23);
 
 % K32
