@@ -31,75 +31,80 @@ omega(1:500,1:k) = 0; omega(501:end,k+1:end) = 0;
 % create sample matrix
 Y = K_mtrx * omega;
 % index the orthogonalized sample matrix for relevant blocks
-U23 = orth(Y(1:500,1:k)); U32 = orth(Y(501:end,k+1:end));
+U2 = orth(Y(1:500,1:k)); U3 = orth(Y(501:end,k+1:end));
 % allocate space for a 'U' matrix
 U_mtrx = zeros(n,2*k);
 % interlace orthonormal U matrix
-U_mtrx(1:500,k+1:end) = U23; U_mtrx(501:end,1:k) = U32; 
+U_mtrx(1:500,k+1:end) = U2; U_mtrx(501:end,1:k) = U3; 
 % create the Z matrix
 Z_mtrx = K_mtrx' * U_mtrx;
 % retrieve the relevant blocks 
-Z23 = Z_mtrx(1:500,1:k); Z32 = Z_mtrx(501:end,k+1:end);
+Z2 = Z_mtrx(1:500,1:k); Z3 = Z_mtrx(501:end,k+1:end);
 
-disp(norm(K_mtrx(1:500,501:end) - (U23 * Z23'), 'fro')^2 / numel(K_mtrx(1:500,501:end)))
+% K2
+U_tree = U_tree.set(2,U2);
+Z_tree = Z_tree.set(2,Z2);
+
+% K3
+U_tree = U_tree.set(3,U3);
+Z_tree = Z_tree.set(3,Z3);
+
+disp(abs(norm(K_mtrx(1:500,501:end) - (U2 * Z2'),'fro') / norm(K_mtrx(1:500,501:end),'fro')));
+disp(abs(norm(K_mtrx(501:end,1:500) - (U3 * Z3'),'fro') / norm(K_mtrx(501:end,1:500),'fro')));
 return
-% K23
-U_tree = U_tree.set(2,U23);
-Z_tree = Z_tree.set(2,Z23);
-
-% K32
-U_tree = U_tree.set(3,U32);
-Z_tree = Z_tree.set(3,Z32);
 
 % Layer 2 (4 blocks)
 % create a random matrix
 omega = randn(n,2*k);
 % interlace random matrix
 omega(1:250,1:k) = 0; omega(251:500,k+1:end) = 0;
-omega(501:750,1:k) = 0; omega(751:1000,k+1:end) = 0;
+omega(501:750,1:k) = 0; omega(751:end,k+1:end) = 0;
 % create sample matrix
 Y = K_mtrx * omega;
-% orthogonalize the result
-U45 = Y(1:250,1:k); U54 = Y(251:500,k+1:end);
-U67 = Y(501:750,1:k); U76 = Y(751:1000,k+1:end);
+% pre-allocate space for upcoming result 
+U4 = Y(1:250,1:k); U5 = Y(251:500,k+1:end);
+U6 = Y(501:750,1:k); U7 = Y(751:end,k+1:end);
 
 %% B: temporary variable; often used to store 'B' values %%
 % subtract away the irrelevant interactions at previous levels
-B = table(( U_tree.get(2) * Z_tree.get(2)' ) * omega(501:1000,1:k)).Var1(1:250,:);
-U45 = orth(U45 - B); 
+B = table(( U_tree.get(2) * Z_tree.get(2)' ) * omega(501:end,1:k)).Var1(1:250,:);
+U4 = orth(U4 - B);
 
-B = table(( U_tree.get(2) * Z_tree.get(2)' ) * omega(501:1000,k+1:end)).Var1(251:end,:);
-U54 = orth(U54 - B);
+B = table(( U_tree.get(2) * Z_tree.get(2)' ) * omega(501:end,k+1:end)).Var1(251:end,:);
+U5 = orth(U5 - B);
 
 B = table(( U_tree.get(3) * Z_tree.get(3)' ) * omega(1:500,1:k)).Var1(1:250,:);
-U67 = orth(U67 - B);
+U6 = orth(U6 - B);
 
 B = table(( U_tree.get(3) * Z_tree.get(3)' ) * omega(1:500,k+1:end)).Var1(251:end,:);
-U76 = orth(U76 - B);
+U7 = orth(U7 - B);
 
 % preallocate space for U matrix
 U_mtrx = zeros(n,2*k);
 % interlace to form U matrix
-U_mtrx(1:250,1:k) = U45; U_mtrx(251:500,k+1:end) = U54;
-U_mtrx(501:750,1:k) = U67; U_mtrx(751:1000,k+1:end) = U76;
+U_mtrx(1:250,k+1:end) = U5; U_mtrx(251:500,1:k) = U4;
+U_mtrx(501:750,k+1:end) = U7; U_mtrx(751:end,1:k) = U6;
 % create Z matrix
 Z_mtrx = K_mtrx' * U_mtrx;
 % retrieve only the relevant portions
-Z45 = Z_mtrx(1:250,1:k); Z54 = Z_mtrx(251:500,k+1:end);
-Z67 = Z_mtrx(501:750,1:k); Z76 = Z_mtrx(751:1000,k+1:end);
+Z4 = Z_mtrx(1:250,1:k); Z5 = Z_mtrx(251:500,k+1:end);
+Z6 = Z_mtrx(501:750,1:k); Z7 = Z_mtrx(751:end,k+1:end);
 
-% K45
-U_tree = U_tree.set(4,U45);
-Z_tree = Z_tree.set(4,Z45);
-% K54
-U_tree = U_tree.set(5,U54);
-Z_tree = Z_tree.set(5,Z54);
-% K67
-U_tree = U_tree.set(6,U67);
-Z_tree = Z_tree.set(6,Z67);
-% K76
-U_tree = U_tree.set(7,U76);
-Z_tree = Z_tree.set(7,Z76);
+disp(abs(norm(K_mtrx(1:250,251:500) - (U4 * Z4'), 'fro') / norm(K_mtrx(1:250,251:500),'fro')))
+return
+
+% K4
+U_tree = U_tree.set(4,U4);
+Z_tree = Z_tree.set(4,Z4);
+% K5
+U_tree = U_tree.set(5,U5);
+Z_tree = Z_tree.set(5,Z5);
+% K6
+U_tree = U_tree.set(6,U6);
+Z_tree = Z_tree.set(6,Z6);
+% K7
+U_tree = U_tree.set(7,U7);
+Z_tree = Z_tree.set(7,Z7);
 
 % Layer 3 (8 blocks)
 % create a random matrix
@@ -108,113 +113,113 @@ omega = randn(n,2*k);
 omega(1:125,1:k) = 0; omega(126:250,k+1:end) = 0;
 omega(251:375,1:k) = 0; omega(376:500,k+1:end) = 0;
 omega(501:625,1:k) = 0; omega(626:750,k+1:end) = 0;
-omega(751:875,1:k) = 0; omega(876:1000,k+1:end) = 0; 
+omega(751:875,1:k) = 0; omega(876:end,k+1:end) = 0; 
 % create sample matrix
 Y = K_mtrx * omega;
 % allocate "impure" Y samples.
-U89 = Y(1:125,1:k); U98 = Y(126:250,k+1:end);
-U1011 = Y(251:375,1:k); U1110 = Y(376:500,k+1:end);
-U1213 = Y(501:625,1:k); U1312 = Y(626:750,k+1:end); 
-U1415 = Y(751:875,1:k); U1514 = Y(876:1000,k+1:end);
+U8 = Y(1:125,1:k); U9 = Y(126:250,k+1:end);
+U10 = Y(251:375,1:k); U11 = Y(376:500,k+1:end);
+U12 = Y(501:625,1:k); U13 = Y(626:750,k+1:end); 
+U14 = Y(751:875,1:k); U15 = Y(876:end,k+1:end);
 
 % Purity and orthogonalize Y samples
-B = table(( U_tree.get(2) * Z_tree.get(2)' ) * omega(501:1000,1:k)).Var1(1:125,:) ...
+B = table(( U_tree.get(2) * Z_tree.get(2)' ) * omega(501:end,1:k)).Var1(1:125,:) ...
 + table((U_tree.get(4) * Z_tree.get(4)') * omega(251:500,1:k)).Var1(1:125,:);
-U89 = orth(U89 - B); 
+U8 = orth(U8 - B); 
 
-B = table(( U_tree.get(2) * Z_tree.get(2)' ) * omega(501:1000,k+1:end)).Var1(126:250,:)...
+B = table(( U_tree.get(2) * Z_tree.get(2)' ) * omega(501:end,k+1:end)).Var1(126:250,:)...
 + table((U_tree.get(4) * Z_tree.get(4)') * omega(251:500,k+1:end)).Var1(126:250,:);
-U98 = orth(U98 - B);
+U9 = orth(U9 - B);
 
-B = table(( U_tree.get(2) * Z_tree.get(2)' ) * omega(501:1000,1:k)).Var1(251:375,:)...
+B = table(( U_tree.get(2) * Z_tree.get(2)' ) * omega(501:end,1:k)).Var1(251:375,:)...
 + table((U_tree.get(5) * Z_tree.get(5)') * omega(1:250,1:k)).Var1(1:125,:);
-U1011 = orth(U1011 - B);
+U10 = orth(U10 - B);
 
-B = table(( U_tree.get(2) * Z_tree.get(2)' ) * omega(501:1000,k+1:end)).Var1(376:500,:)...
+B = table(( U_tree.get(2) * Z_tree.get(2)' ) * omega(501:end,k+1:end)).Var1(376:500,:)...
 + table((U_tree.get(5) * Z_tree.get(5)') * omega(1:250,k+1)).Var1(126:250,:);
-U1110 = orth(U1110 - B);
+U11 = orth(U11 - B);
 
 B = table(( U_tree.get(3) * Z_tree.get(3)' ) * omega(1:500,1:k)).Var1(1:125,:)...
-+ table(( U_tree.get(6) * Z_tree.get(6)' ) * omega(751:1000,1:k)).Var1(1:125,:);
-U1213 = orth(U1213- B); 
++ table(( U_tree.get(6) * Z_tree.get(6)' ) * omega(751:end,1:k)).Var1(1:125,:);
+U12 = orth(U12- B); 
 
 B = table((U_tree.get(3) * Z_tree.get(3)') *omega(1:500,k+1:end)).Var1(126:250,:)...
-+ table(( U_tree.get(6) * Z_tree.get(6)' ) * omega(751:1000,k+1:end)).Var1(126:250,:);
-U1312 = orth(U1312 - B);
++ table(( U_tree.get(6) * Z_tree.get(6)' ) * omega(751:end,k+1:end)).Var1(126:250,:);
+U13 = orth(U13 - B);
 
 B = table((U_tree.get(3) * Z_tree.get(3)') * omega(1:500,1:k)).Var1(251:375,:)...
 + table(( U_tree.get(7) * Z_tree.get(7)') * omega(501:750,1:k)).Var1(1:125,:);
-U1415 = orth(U1415 - B);
+U14 = orth(U14 - B);
 
 B = table(( U_tree.get(3) * Z_tree.get(3)' ) * omega(1:500,k+1:end)).Var1(376:500,:)...
 + table((U_tree.get(7) *Z_tree.get(7)') * omega(501:750,k+1:end)).Var1(126:250,:);
-U1514 = orth(U1514 - B);
+U15 = orth(U15 - B);
 
 % preallocate for U matrix
 U_mtrx = zeros(n,2*k);
 % interlace to form U matrix
-U_mtrx(1:125,k+1:end) = U89; U_mtrx(126:250,1:k) = U98;
-U_mtrx(251:375,k+1:end) = U1011; U_mtrx(376:500,1:k) = U1110;
-U_mtrx(501:625,k+1:end) = U1213; U_mtrx(626:750,1:k) = U1312;
-U_mtrx(751:875,k+1:end) = U1415; U_mtrx(876:1000,1:k) = U1514;
+U_mtrx(1:125,k+1:end) = U8; U_mtrx(126:250,1:k) = U9;
+U_mtrx(251:375,k+1:end) = U10; U_mtrx(376:500,1:k) = U11;
+U_mtrx(501:625,k+1:end) = U12; U_mtrx(626:750,1:k) = U13;
+U_mtrx(751:875,k+1:end) = U14; U_mtrx(876:end,1:k) = U15;
 
 % create Z matrix
 Z_mtrx = K_mtrx' * U_mtrx;
 
 % retrieve the relevant blocks
-Z89 = Z_mtrx(1:125,1:k); Z98 = Z_mtrx(126:250,k+1:end);
-Z1011 = Z_mtrx(251:375,1:k); Z1110 = Z_mtrx(376:500,k+1:end);
-Z1213 = Z_mtrx(501:625,1:k); Z1312 = Z_mtrx(626:750,k+1:end);
-Z1415 = Z_mtrx(751:875,1:k); Z1514 = Z_mtrx(876:1000,k+1:end);
+Z8 = Z_mtrx(1:125,1:k); Z9 = Z_mtrx(126:250,k+1:end);
+Z10 = Z_mtrx(251:375,1:k); Z11 = Z_mtrx(376:500,k+1:end);
+Z12 = Z_mtrx(501:625,1:k); Z13 = Z_mtrx(626:750,k+1:end);
+Z14 = Z_mtrx(751:875,1:k); Z15 = Z_mtrx(876:end,k+1:end);
 
-% K89
-U_tree = U_tree.set(8,U89);
-Z_tree = Z_tree.set(8,Z89);
+% K8
+U_tree = U_tree.set(8,U8);
+Z_tree = Z_tree.set(8,Z8);
 
-% K98
-U_tree = U_tree.set(9,U98);
-Z_tree = Z_tree.set(9,Z98);
+% K9
+U_tree = U_tree.set(9,U9);
+Z_tree = Z_tree.set(9,Z9);
 
-% K1011
-U_tree = U_tree.set(10,U1011);
-Z_tree = Z_tree.set(10,Z1011);
+% K10
+U_tree = U_tree.set(10,U10);
+Z_tree = Z_tree.set(10,Z10);
 
-% K1110
-U_tree = U_tree.set(11,U1110);
-Z_tree = Z_tree.set(11,U1110);
+% K11
+U_tree = U_tree.set(11,U11);
+Z_tree = Z_tree.set(11,U11);
 
-% K1213
-U_tree = U_tree.set(12,U1213);
-Z_tree = Z_tree.set(12,Z1213);
+% K12
+U_tree = U_tree.set(12,U12);
+Z_tree = Z_tree.set(12,Z12);
 
-% K1312
-U_tree = U_tree.set(13,U1312);
-Z_tree = Z_tree.set(13,Z1312);
+% K13
+U_tree = U_tree.set(13,U13);
+Z_tree = Z_tree.set(13,Z13);
 
-% K1415
-U_tree = U_tree.set(14,U1415);
-Z_tree = Z_tree.set(14,Z1415);
+% K14
+U_tree = U_tree.set(14,U14);
+Z_tree = Z_tree.set(14,Z14);
 
-% K1514
-U_tree = U_tree.set(15,U1514);
-Z_tree = Z_tree.set(15,Z1514);
+% K15
+U_tree = U_tree.set(15,U15);
+Z_tree = Z_tree.set(15,Z15);
 
 % reconstruct the K matrix approximation from U and Z values
 K_approx = K_mtrx;
-K_approx(1:500,501:1000) = U_tree.get(2) * Z_tree.get(2)';
-K_approx(501:1000,1:500) = U_tree.get(3) * Z_tree.get(3)';
+K_approx(1:500,501:end) = U_tree.get(2) * Z_tree.get(2)';
+K_approx(501:end,1:500) = U_tree.get(3) * Z_tree.get(3)';
 K_approx(1:250,251:500) = U_tree.get(4) * Z_tree.get(4)';
 K_approx(251:500,1:250) = U_tree.get(5) * Z_tree.get(5)';
-K_approx(501:750,751:1000) = U_tree.get(6) * Z_tree.get(6)';
-K_approx(751:1000,501:750) = U_tree.get(7) * Z_tree.get(7)';
+K_approx(501:750,751:end) = U_tree.get(6) * Z_tree.get(6)';
+K_approx(751:end,501:750) = U_tree.get(7) * Z_tree.get(7)';
 K_approx(1:125,126:250) = U_tree.get(8) * Z_tree.get(8)';
 K_approx(126:250,1:125) = U_tree.get(9) * Z_tree.get(9)';
 K_approx(251:375,376:500) = U_tree.get(10) * Z_tree.get(10)';
 K_approx(376:500,251:375) = U_tree.get(11) * Z_tree.get(11)';
 K_approx(501:625,626:750) = U_tree.get(12) * Z_tree.get(12)';
 K_approx(626:750,501:625) = U_tree.get(13) * Z_tree.get(13)';
-K_approx(751:875,876:1000) = U_tree.get(14) * Z_tree.get(14)';
-K_approx(876:1000,751:875) = U_tree.get(15) * Z_tree.get(15)';
+K_approx(751:875,876:end) = U_tree.get(14) * Z_tree.get(14)';
+K_approx(876:end,751:875) = U_tree.get(15) * Z_tree.get(15)';
 
-disp(norm(K_mtrx - K_approx, 'fro')^2 / numel(K_mtrx))
+disp(abs(norm(K_mtrx - K_approx, 'fro') / norm(K_mtrx, 'fro')))
 %end
