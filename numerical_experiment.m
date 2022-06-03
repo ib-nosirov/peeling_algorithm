@@ -2,15 +2,12 @@
 % Make it so we only multiply by K.
 % Add documentation
 n = 1000;
-d = 130;
+diag_size = 130;
 I = [1 n];
-% make binary tree
-idx_tree = tree(I);
-idx_tree = create_children(idx_tree,1,d);
 % make a kernel
-rbf = @(e,r) exp(-(e*r).^2); ep = 5; d = 1;
+rbf = @(e,r) exp(-(e*r).^2); ep = 5; dim = 1;
 % Pointervals at which to sample
-x = CreatePoints(n^d,d,'u');
+x = CreatePoints(n^dim,dim,'u');
 % compute the absolute difference
 DM = DistanceMatrix(x,x);
 % sample matrix
@@ -20,19 +17,24 @@ K_mtrx = rbf(ep,DM);
 k = 10; % what should this rank really be? We don't know 
 
 % store U and Z values in nodes respective to index intervals.
-t_order = idx_tree.breadthfirstiterator;
-it = 2;
+% make binary tree
+idx_tree = tree(I);
+idx_tree = create_children(idx_tree,1,diag_size);
+t_order = idx_tree.breadthfirstiterator
 U_tree = idx_tree;
 Z_tree = idx_tree;
+
 % convert # of elements to # of layers; 
 %ex: 15 nodes -> 3 layers
 tree_depth = log2(nnodes(idx_tree)+1) - 1;
 Omega = randn(n, 2*k);
+% Layer 1 (2 blocks)
 
-% Compute the first partition.
-
-for l=1:tree_depth
-    mask = MakeMask(n,l,k);
+for l=2:tree_depth
+    % create a random matrix
+    omega = randn(n,2*k);
+    % interlace random matrix 
+    mask = Interlace(idx_tree,l,k);
     % compute sample matrix using interlaced random matrix.
     Y = K_mtrx * (Omega .* mask);
     % partition size -> # of intervals
@@ -61,10 +63,10 @@ for l=1:tree_depth
         it = it + 1;
     end
 
-    function Y_pure = PurifySample(Y,intervals,idx)
-        
-    Y(intervals(idx):intervals(idx+1)-1, 1:k);
-    end
+%    function Y_pure = PurifySample(Y,intervals,idx)
+%        
+%    Y(intervals(idx):intervals(idx+1)-1, 1:k);
+%    end
 end
 %% check the accuracy.
 %K = rbf(ep, DM);
@@ -96,4 +98,7 @@ function mask = MakeMask(n,l,k)
     block = [row; row_flip];
     % keep stacking blocks 2^(l-1) times to form the entire mask
     mask = repmat(block, 2^(l-1), 1);
+end
+
+function interlaced_matrix = Interlace(tree,l,k)
 end

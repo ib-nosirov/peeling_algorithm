@@ -48,10 +48,8 @@ Z_tree = Z_tree.set(2,Z2);
 % K3
 U_tree = U_tree.set(3,U3);
 Z_tree = Z_tree.set(3,Z3);
-
-disp(abs(norm(K_mtrx(1:500,501:end) - (U2 * Z2'),'fro') / norm(K_mtrx(1:500,501:end),'fro')));
-disp(abs(norm(K_mtrx(501:end,1:500) - (U3 * Z3'),'fro') / norm(K_mtrx(501:end,1:500),'fro')));
-return
+disp(abs(norm(K_mtrx(1:500,501:end) - (U_tree.get(2) * Z_tree.get(3)'),'fro') / norm(K_mtrx(1:500,501:end),'fro')));
+disp(abs(norm(K_mtrx(501:end,1:500) - (U_tree.get(3) * Z_tree.get(2)'),'fro') / norm(K_mtrx(501:end,1:500),'fro')));
 
 % Layer 2 (4 blocks)
 % create a random matrix
@@ -62,35 +60,37 @@ omega(501:750,1:k) = 0; omega(751:end,k+1:end) = 0;
 % create sample matrix
 Y = K_mtrx * omega;
 % pre-allocate space for upcoming result 
-U4 = Y(1:250,1:k); U5 = Y(251:500,k+1:end);
-U6 = Y(501:750,1:k); U7 = Y(751:end,k+1:end);
+Y4 = Y(1:250,1:k); Y5 = Y(251:500,k+1:end);
+Y6 = Y(501:750,1:k); Y7 = Y(751:end,k+1:end);
 
-%% B: temporary variable; often used to store 'B' values %%
+% regardless of B or not, we get the same result.
+%% B: temporendary variable; often used to store residual values %%
 % subtract away the irrelevant interactions at previous levels
-B = table(( U_tree.get(2) * Z_tree.get(2)' ) * omega(501:end,1:k)).Var1(1:250,:);
-U4 = orth(U4 - B);
+B = table((U_tree.get(2) * Z_tree.get(3)') * omega(501:end,1:k)).Var1(1:250,:);
+U4 = orth(Y4 - B); % this only works for k = 9 or smaller.
 
-B = table(( U_tree.get(2) * Z_tree.get(2)' ) * omega(501:end,k+1:end)).Var1(251:end,:);
-U5 = orth(U5 - B);
+B = table((U_tree.get(2) * Z_tree.get(3)') * omega(501:end,k+1:end)).Var1(251:end,:);
+U5 = orth(Y5 - B);
 
-B = table(( U_tree.get(3) * Z_tree.get(3)' ) * omega(1:500,1:k)).Var1(1:250,:);
-U6 = orth(U6 - B);
+B = table((U_tree.get(3) * Z_tree.get(2)') * omega(1:500,1:k)).Var1(1:250,:);
+U6 = orth(Y6 - B);
 
-B = table(( U_tree.get(3) * Z_tree.get(3)' ) * omega(1:500,k+1:end)).Var1(251:end,:);
-U7 = orth(U7 - B);
-
+B = table((U_tree.get(3) * Z_tree.get(2)') * omega(1:500,k+1:end)).Var1(251:end,:);
+U7 = orth(Y7 - B);
 % preallocate space for U matrix
 U_mtrx = zeros(n,2*k);
 % interlace to form U matrix
-U_mtrx(1:250,k+1:end) = U5; U_mtrx(251:500,1:k) = U4;
-U_mtrx(501:750,k+1:end) = U7; U_mtrx(751:end,1:k) = U6;
+U_mtrx(1:250,k+1:end) = U4; U_mtrx(251:500,1:k) = U5;
+U_mtrx(501:750,k+1:end) = U6; U_mtrx(751:end,1:k) = U7;
 % create Z matrix
 Z_mtrx = K_mtrx' * U_mtrx;
 % retrieve only the relevant portions
 Z4 = Z_mtrx(1:250,1:k); Z5 = Z_mtrx(251:500,k+1:end);
 Z6 = Z_mtrx(501:750,1:k); Z7 = Z_mtrx(751:end,k+1:end);
-
-disp(abs(norm(K_mtrx(1:250,251:500) - (U4 * Z4'), 'fro') / norm(K_mtrx(1:250,251:500),'fro')))
+disp(abs(norm(K_mtrx(1:250,251:500) - (U4 * Z5'), 'fro') / norm(K_mtrx(1:250,251:500),'fro')));
+disp(abs(norm(K_mtrx(251:500,1:250) - (U5 * Z4'), 'fro') / norm(K_mtrx(251:500,1:250),'fro')));
+disp(abs(norm(K_mtrx(501:750,751:end) - (U6 * Z7'), 'fro') / norm(K_mtrx(501:750,751:end),'fro')));
+disp(abs(norm(K_mtrx(751:end,501:750) - (U7 * Z6'), 'fro') / norm(K_mtrx(751:end,501:750),'fro')));
 return
 
 % K4
