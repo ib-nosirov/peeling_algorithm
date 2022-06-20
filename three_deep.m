@@ -65,10 +65,10 @@ Y6 = Y(501:750,1:k); Y7 = Y(751:end,k+1:end);
 
 % regardless of B or not, we get the same result.
 %% B: temporary variable; often used to store residual values %%
-% subtract away the irrelevant interactions at previous levels
+% subtract away interactions irrelevant to this level.
 B = table(U_tree.get(2)).Var1(1:250,:) * (table(Z_tree.get(3)).Var1(251:end,:)' * omega(751:end,1:k));
 %B2 = table(U_tree.get(2) * (Z_tree.get(3)' * omega(501:end,1:k))).Var1(1:250,:);
-U4 = orth(Y4 - B); 
+U4 = orth(Y4 - B);
 
 B = table(U_tree.get(2)).Var1(251:end,:) * (table(Z_tree.get(3)).Var1(1:250,:)' * omega(501:750,k+1:end));
 %B = table((U_tree.get(2) * Z_tree.get(3)') * omega(501:end,k+1:end)).Var1(251:end,:);
