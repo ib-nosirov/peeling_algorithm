@@ -103,12 +103,17 @@ end
 		B = 0;
 		for idx = 1:length(node_path)
 			[U Z node] = getPrevGeneration(idx,node_path);
+			% node: the interval on the parent node.
 			s1 = mod(interval(1),length(U));
 			f1 = mod(interval(2),length(U));
 			if f1 == 0	f1 = length(U);	end
 			U = U(s1:f1,:);
 			s2 = node(1); f2 = node(2);
-			B = B + U * (Z' * omega(s2:f2,1:k));
+			if isTopNode(node_path(idx))
+				B = B + U * (Z' * omega(s2:f2,1:k));
+			else
+				B = B + U * (Z' * omega(s2:f2,k+1:end));
+			end
 		end
 	end
 
@@ -130,7 +135,11 @@ end
 			if f1 == 0	f1 = length(Z);	end
 			Z = Z(s1:f1,:);
 			s2 = node(1); f2 = node(2);
-			B = B + Z * (U' * U_mtrx(s2:f2,1:k));
+			if isTopNode(node_path(idx))
+				B = B + Z * (U' * U_mtrx(s2:f2,1:k));
+			else
+				B = B + Z * (U' * U_mtrx(s2:f2,k+1:end));
+			end
 		end
 	end
 
