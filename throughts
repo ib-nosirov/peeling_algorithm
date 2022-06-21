@@ -1,0 +1,2 @@
+node value corresponds to indexing in the tree -> tree has wacky indexing
+order -> leads to errors.
