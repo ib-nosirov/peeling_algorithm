@@ -16,7 +16,6 @@ for g = 2:tree_depth
 	% compute the U and Z skinny matrices emerging from the next generation's
 	% indices
 	computeNextGeneration(g);
-	return
 end
 
 	function output = computeFirstGeneration()
@@ -40,7 +39,7 @@ end
 		U_tree = U_tree.set(2,U2); Z_tree = Z_tree.set(2,Z2);
 		% K3
 		U_tree = U_tree.set(3,U3); Z_tree = Z_tree.set(3,Z3);
-	end
+		end
 
 	function no_return = computeNextGeneration(generation)
 		% ARGS:
@@ -112,7 +111,8 @@ end
 		node_path = findNodeDFS(curr_interval);
 		B = 0;
 		% (3)
-		for idx = 1:length(node_path)
+		% start with 2nd index; first index is node itself.
+		for idx = 2:length(node_path)
 			% retrieve 'idx'th ancestor.
 			% prev_interval comes from the sibling of the ancestor node. It
 			% determines which rows of the sample matrix to index.
@@ -136,7 +136,7 @@ end
 			% should be construcing the relevant s1:f1 rows of the K block
 			% (which now forms a short/fat rectangle) and
 			% multiplying by the corresponding s2:f2 elements in omega.
-			if isUpperTriangleBlock(node_path(idx))
+			if isUpperTriangleBlock(node_path(1))
 				B = B + U(s1:f1,:) * (Z' * omega(s2:f2,1:k));
 			else
 				B = B + U(s1:f1,:) * (Z' * omega(s2:f2,k+1:end));
@@ -158,7 +158,7 @@ end
 		node_path = findNodeDFS(curr_interval);
 		B = 0;
 		% (3)
-		for idx = 1:length(node_path)
+		for idx = 2:length(node_path)
 			% retrieve 'idx'th ancestor.
 			[U Z prev_interval] = getAncestorZ(idx,node_path);
 			% what portion of the 'ancestor block' to index is determined by
@@ -173,7 +173,7 @@ end
 
 			% if a block is in the upper triangle, then we index the first k
 			% columns of U_mtrx.
-			if isUpperTriangleBlock(node_path(idx))
+			if isUpperTriangleBlock(node_path(1))
 				B = B + Z(s1:f1,:) * (U' * U_mtrx(s2:f2,1:k));
 			else
 				B = B + Z(s1:f1,:) * (U' * U_mtrx(s2:f2,k+1:end));
@@ -260,7 +260,7 @@ end
 				node_path = idx_tree.findpath(it_a(idx), 1);
 				% discard the first (irrelevant) and last node (node can't be a
 				% parent of itself).
-				node_path = node_path(2:end-1);
+				node_path = node_path(1:end-1);
 				return
 			end
 		end
