@@ -114,6 +114,8 @@ end
 		% (3)
 		for idx = 1:length(node_path)
 			% retrieve 'idx'th ancestor.
+			% prev_interval comes from the sibling of the ancestor node. It
+			% determines which rows of the sample matrix to index.
 			[U Z prev_interval] = getAncestorU(idx,node_path);
 			% what portion of the 'ancestor block' to index is determined by
 			% which rows the the current interval is in.
@@ -123,11 +125,17 @@ end
 
 			% the columns of the previous block correspond to the rows of the
 			% skinny matrix, by definition of matrix multiplication.
-			s2 = prev_interval(1);
-			f2 = prev_interval(2);
+			s2 = prev_interval(1); f2 = prev_interval(2);
 
 			% if a block is in the upper triangle, then we index the first k
 			% columns of omega.
+
+			% THE MOST QUESTIONABLE portion of the code: not indexing the
+			% conjugate term at all. In theory, the padded zeros in the sample
+			% matrix should make sure everything works out. In essence, we
+			% should be construcing the relevant s1:f1 rows of the K block
+			% (which now forms a short/fat rectangle) and
+			% multiplying by the corresponding s2:f2 elements in omega.
 			if isUpperTriangleBlock(node_path(idx))
 				B = B + U(s1:f1,:) * (Z' * omega(s2:f2,1:k));
 			else
@@ -206,17 +214,18 @@ end
 		%	node_path: path of ancestor nodes in the idx_tree.
 		% OUTPUT: array containing an ancestor node's corresponding U block, Z
 		% block, and interval.
-		% DESCRIPTION: depending on whether the node corresponds to a block in
-		% the upper or lower triangle, the sibling is either to the left or
-		% right of the index in question.
+		% DESCRIPTION: Same process as the for U, but the order of which node
+		% is pulled from which tree is reversed.
 
 		block_num = node_path(idx);
 		if isUpperTriangleBlock(block_num)
+			% order is reversed.
 			Z = Z_tree.get(block_num); U = U_tree.get(block_num+1);
 			% the interval of the Z node is the interval of the columns of
 			% sample matrix.
 			interval = idx_tree.get(block_num+1);
 		else
+			% order is reversed.
 			Z = Z_tree.get(block_num-1); U = U_tree.get(block_num);
 			% the interval of the Z node is the interval of the columns of
 			% sample matrix.

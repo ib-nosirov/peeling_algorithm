@@ -156,7 +156,7 @@ B = table((U_tree.get(2) * Z_tree.get(3)') * omega(501:end,1:k)).Var1(251:375,:)
 U10 = orth(U10 - B);
 
 B = table(( U_tree.get(2) * Z_tree.get(3)') * omega(501:end,k+1:end)).Var1(376:500,:)...
-+ table((U_tree.get(5) * Z_tree.get(4)') * omega(1:250,k+1)).Var1(126:250,:);
++ table((U_tree.get(5) * Z_tree.get(4)') * omega(1:250,k+1:end)).Var1(126:250,:);
 U11 = orth(U11 - B);
 
 B = table((U_tree.get(3) * Z_tree.get(2)') * omega(1:500,1:k)).Var1(1:125,:)...
