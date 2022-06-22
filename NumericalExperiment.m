@@ -1,5 +1,4 @@
-function [U_tree Z_tree idx_tree K_approx] = NumericalExperiment(K_mtrx,n,k,diag_size,I)
-K_approx= 0;
+function [U_tree Z_tree idx_tree] = NumericalExperiment(K_mtrx,n,k,diag_size,I)
 % make binary tree
 idx_tree = tree(I);
 idx_tree = createChildren(idx_tree,1,diag_size);
@@ -201,10 +200,10 @@ end
 			% sample matrix.
 			interval = idx_tree.get(block_num+1);
 		else
-			U = U_tree.get(block_num-1); Z = Z_tree.get(block_num);
+			U = U_tree.get(block_num); Z = Z_tree.get(block_num-1);
 			% the interval of the Z node is the interval of the columns of
 			% sample matrix.
-			interval = idx_tree.get(block_num);
+			interval = idx_tree.get(block_num-1);
 		end
 	end
 
@@ -226,10 +225,10 @@ end
 			interval = idx_tree.get(block_num+1);
 		else
 			% order is reversed.
-			Z = Z_tree.get(block_num-1); U = U_tree.get(block_num);
+			Z = Z_tree.get(block_num); U = U_tree.get(block_num-1);
 			% the interval of the Z node is the interval of the columns of
 			% sample matrix.
-			interval = idx_tree.get(block_num);
+			interval = idx_tree.get(block_num-1);
 		end
 	end
 
