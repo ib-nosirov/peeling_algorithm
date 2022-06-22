@@ -1,4 +1,5 @@
-function [U_tree Z_tree idx_tree] = NumericalExperiment(K_mtrx,n,k,diag_size,I)
+function [U_tree Z_tree idx_tree K_approx] = NumericalExperiment(K_mtrx,n,k,diag_size,I)
+K_approx= 0;
 % make binary tree
 idx_tree = tree(I);
 idx_tree = createChildren(idx_tree,1,diag_size);
@@ -15,6 +16,7 @@ for g = 2:tree_depth
 	% compute the U and Z skinny matrices emerging from the next generation's
 	% indices
 	computeNextGeneration(g);
+	return
 end
 
 	function output = computeFirstGeneration()
@@ -50,8 +52,8 @@ end
 		% DESCRIPTION: perform the peeling algorithm steps described in
 		% Martinsson/Tropp Section 20.5 (pgs 98-101).
 
-		% idx_c: index cell array of this generation's indices; all nodes in
-		% single generation of 'idx_tree'
+		% idx_c: index cell array of this generation's index pairs; all nodes
+		% in single generation of 'idx_tree'
 		[starting_idx idx_c] = traverseGeneration(idx_tree,generation);
 		it_idx = starting_idx-1; it = idx_tree.breadthfirstiterator;
 		% create a random matrix and interlace it with zeros.
@@ -61,13 +63,16 @@ end
 		% preallocate for upcoming result.
 		U_mtrx = zeros(n,2*k);
 		% Create U vectors and interlace them with zeros.
-		for idx = 2:2:length(idx_c) 
+		for idx = 2:2:length(idx_c)
 			% determine which blocks in the sample matrix we wish to index.
 			[s1 f1 s2 f2] = getIntervals(idx_c,idx);
+			U1 = Y(s1:f1,1:k); U2 = Y(s2:f2,k+1:end);
+
+			%% ALL GOOD up until here.%%
+
 			% Compute residuals and orthogonalize the 'purified' result.
-			U1 = Y(s1:f1,1:k); U1 = orth(U1 - computeResidualU([s1 f1],omega));
-			U2 = Y(s2:f2,k+1:end); U2 = orth(U2 - computeResidualU([s2 f2],...
-										omega));
+			U1 = orth(U1 - computeResidualU([s1 f1],omega));
+			U2 = orth(U2 - computeResidualU([s2 f2],omega));
 			% interlace U1 and U2 into relevant blocks.
 			U_mtrx(s1:f1,k+1:end) = U1; U_mtrx(s2:f2,1:k) = U2;
 			% set U values and adjust the iterator.
@@ -82,20 +87,20 @@ end
 		for idx = 2:2:length(idx_c) 
 			% determine which blocks in the sample matrix we wish to index.
 			[s1 f1 s2 f2] = getIntervals(idx_c,idx);
+			Z1 = Z_mtrx(s1:f1,1:k); Z2 = Z_mtrx(s2:f2,k+1:end);
 			% Compute residuals and orthogonalize the 'purified' result.
-			Z1 = Z_mtrx(s1:f1,1:k); Z1 = Z1 - computeResidualZ([s1 f1],U_mtrx);
-			Z2 = Z_mtrx(s2:f2,k+1:end); Z2 = Z2 - computeResidualZ([s2 f2],...
-										U_mtrx);
+			Z1 = Z1 - computeResidualZ([s1 f1],U_mtrx);
+			Z2 = Z2 - computeResidualZ([s2 f2],U_mtrx);
+			% set Z values and adjust the iterator.
 			it_idx = it_idx+2;
 			Z_tree = Z_tree.set(it(it_idx),Z2);
 			Z_tree = Z_tree.set(it(it_idx-1),Z1);
 		end
-
 	end
 
 	function B = computeResidualU(curr_interval,omega)
 		% ARGS:
-		%	interval: array containing start and finish for sample matrix
+		%	curr_interval: array containing start and finish for sample matrix
 		%	block.
 		%   omega: random skinny matrix interlaced with zeros.
 		% OUTPUT: vector containing residual value for sample matrix block.
@@ -104,12 +109,12 @@ end
 		% parent with a portion of the sample matrix.
 
 		% (1) and (2)
-		node_path = findNodeDFS(interval);
+		node_path = findNodeDFS(curr_interval);
 		B = 0;
 		% (3)
 		for idx = 1:length(node_path)
 			% retrieve 'idx'th ancestor.
-			[U Z prev_interval] = getAncestor(idx,node_path);
+			[U Z prev_interval] = getAncestorU(idx,node_path);
 			% what portion of the 'ancestor block' to index is determined by
 			% which rows the the current interval is in.
 			s1 = mod(curr_interval(1),length(U));
@@ -118,7 +123,8 @@ end
 
 			% the columns of the previous block correspond to the rows of the
 			% skinny matrix, by definition of matrix multiplication.
-			s2 = prev_interval(1); f2 = prev_interval(2);
+			s2 = prev_interval(1);
+			f2 = prev_interval(2);
 
 			% if a block is in the upper triangle, then we index the first k
 			% columns of omega.
@@ -146,7 +152,7 @@ end
 		% (3)
 		for idx = 1:length(node_path)
 			% retrieve 'idx'th ancestor.
-			[U Z prev_interval] = getAncestor(idx,node_path);
+			[U Z prev_interval] = getAncestorZ(idx,node_path);
 			% what portion of the 'ancestor block' to index is determined by
 			% which rows the the current interval is in.
 			s1 = mod(curr_interval(1),length(Z));
@@ -155,7 +161,7 @@ end
 
 			% the columns of the previous block correspond to the rows of the
 			% skinny matrix, by definition of matrix multiplication.
-			s2 = pre_interval(1); f2 = prev_interval(2);
+			s2 = prev_interval(1); f2 = prev_interval(2);
 
 			% if a block is in the upper triangle, then we index the first k
 			% columns of U_mtrx.
@@ -168,7 +174,33 @@ end
 	end
 
 	% Node checks out.
-	function [U Z prev_interval] = getAncestor(idx,node_path)
+	function [U Z interval] = getAncestorU(idx,node_path)
+		% ARGS:
+		%	idx: index of the node_path indicating which ancestor to retrieve.
+		%	node_path: path of ancestor nodes in the idx_tree.
+		% OUTPUT: array containing an ancestor node's corresponding U block, Z
+		% block, and interval.
+		% DESCRIPTION: depending on whether the node corresponds to a block in
+		% the upper or lower triangle, the sibling is either to the left or
+		% right of the index in question.
+
+		% take the first index of the block in the Tropp diagram. That
+		% corresponds to the node.
+		block_num = node_path(idx);
+		if isUpperTriangleBlock(block_num)
+			U = U_tree.get(block_num); Z = Z_tree.get(block_num+1);
+			% the interval of the Z node is the interval of the columns of
+			% sample matrix.
+			interval = idx_tree.get(block_num+1);
+		else
+			U = U_tree.get(block_num-1); Z = Z_tree.get(block_num);
+			% the interval of the Z node is the interval of the columns of
+			% sample matrix.
+			interval = idx_tree.get(block_num);
+		end
+	end
+
+	function [U Z interval] = getAncestorZ(idx,node_path)
 		% ARGS:
 		%	idx: index of the node_path indicating which ancestor to retrieve.
 		%	node_path: path of ancestor nodes in the idx_tree.
@@ -180,11 +212,15 @@ end
 
 		block_num = node_path(idx);
 		if isUpperTriangleBlock(block_num)
-			U = U_tree.get(block_num); Z = Z_tree.get(block_num+1);
-			node = idx_tree.get(block_num+1);
+			Z = Z_tree.get(block_num); U = U_tree.get(block_num+1);
+			% the interval of the Z node is the interval of the columns of
+			% sample matrix.
+			interval = idx_tree.get(block_num+1);
 		else
-			U = U_tree.get(block_num-1); Z = Z_tree.get(block_num);
-			node = idx_tree.get(block_num-1);
+			Z = Z_tree.get(block_num-1); U = U_tree.get(block_num);
+			% the interval of the Z node is the interval of the columns of
+			% sample matrix.
+			interval = idx_tree.get(block_num);
 		end
 	end
 
@@ -195,7 +231,7 @@ end
 		% OUTPUT: boolean value.
 		% DESCRIPTION: all blocks in the upper triangle are defined to have
 		% even values.
-		bool_value = (mod(node_value,2) == 0);
+		bool_value = (mod(block_num,2) == 0);
 	end
 
 	function node_path = findNodeDFS(interval)
@@ -232,22 +268,6 @@ end
 			[s1 f1 s2 f2] = getIntervals(idx_c,idx);
 			mtrx(s1:f1,1:k) = 0; mtrx(s2:f2,k+1:end) = 0;
 		end
-	end
-
-	function [block1 block2] = extractBlocks(mtrx,idx_c,idx)
-		% ARGS:
-		%	mtrx: skinny matrix that is size n x 2*k.
-		%	idx_c: cell array containing this generation's nodes from idx_tree.
-		%	idx: node in the idx_tree whose start and finish values we need.
-		% OUTPUT: array of blocks extracted from a skinny matrix.
-		% DESCRIPTION: each node in idx_tree has corresponding U and Z blocks
-		% that we extract, in pairs, from skinny matrices that result from
-		% matrix multiplies.
-
-		% retrieve indices for the sibling nodes whose blocks we wish to
-		% extract.
-		[s1 f1 s2 f2] = getIntervals(idx_c,idx);
-		block1 = mtrx(s1:f1,1:k); block2 = mtrx(s2:f2,k+1:end);
 	end
 
 	function [s1 f1 s2 f2] = getIntervals(idx_c,idx)

@@ -6,7 +6,7 @@ k = 10; % what should this rank really be? We don't know
 I = [1 n];
 % make binary tree
 idx_tree = tree(I);
-idx_tree = CreateChildren(idx_tree,1,diag_size);
+idx_tree = createChildren(idx_tree,1,diag_size);
 % make a kernel
 rbf = @(e,r) exp(-(e*r).^2); ep = 20; d = 1;
 % Pointervals at which to sample
@@ -99,6 +99,9 @@ Z4 = Z4 - B;
 
 B = table(Z_tree.get(2)).Var1(251:end,:) * (table(U_tree.get(3)).Var1(1:250,:)' * U_mtrx(501:750,k+1:end));
 Z5 = Z5 - B;
+K_exact = U4 * Z5';
+size(K_exact)
+return
 
 B = table(Z_tree.get(3)).Var1(1:250,:) * (table(U_tree.get(2)).Var1(251:end,:)' * U_mtrx(251:500,1:k));
 Z6 = Z6 - B;
