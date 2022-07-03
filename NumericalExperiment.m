@@ -1,21 +1,22 @@
 function [U_tree Z_tree idx_tree] = NumericalExperiment(K_mtrx,n,k,diag_size,I)
-% make binary tree
-idx_tree = tree(I);
-idx_tree = createChildren(idx_tree,1,diag_size);
-% store U and Z values in nodes respective to index intervals.
-U_tree = idx_tree; Z_tree = idx_tree;
+	% make binary tree
+	idx_tree = tree(I);
+	idx_tree = createChildren(idx_tree,1,diag_size);
+	% store U and Z values in nodes respective to index intervals.
+	U_tree = idx_tree; Z_tree = idx_tree;
 
-% Layer 1
-computeFirstGeneration();
+	% Layer 1
+	computeFirstGeneration();
 
-% we need to subtract away residuals for every generation after generation 1.
-tree_depth = log2(nnodes(idx_tree)+1) - 1;
-% subsequent generations. 
-for g = 2:tree_depth
-	% compute the U and Z skinny matrices emerging from the next generation's
-	% indices
-	computeNextGeneration(g);
-end
+	% we need to subtract away residuals for every generation after generation
+	% 1.
+	tree_depth = log2(nnodes(idx_tree)+1) - 1;
+	% subsequent generations. 
+	for g = 2:tree_depth
+		% compute the U and Z skinny matrices emerging from the next
+		% generation's indices
+		computeNextGeneration(g);
+	end
 
 	function output = computeFirstGeneration()
 		% create a random matrix and interlace it with zeroes.
@@ -65,8 +66,6 @@ end
 			% determine which blocks in the sample matrix we wish to index.
 			[s1 f1 s2 f2] = getIntervals(idx_c,idx);
 			U1 = Y(s1:f1,1:k); U2 = Y(s2:f2,k+1:end);
-
-			%% ALL GOOD up until here.%%
 
 			% Compute residuals and orthogonalize the 'purified' result.
 			U1 = orth(U1 - computeResidualU([s1 f1],omega));
@@ -129,12 +128,6 @@ end
 			% if a block is in the upper triangle, then we index the first k
 			% columns of omega.
 
-			% THE MOST QUESTIONABLE portion of the code: not indexing the
-			% conjugate term at all. In theory, the padded zeros in the sample
-			% matrix should make sure everything works out. In essence, we
-			% should be construcing the relevant s1:f1 rows of the K block
-			% (which now forms a short/fat rectangle) and
-			% multiplying by the corresponding s2:f2 elements in omega.
 			if isUpperTriangleBlock(node_path(1))
 				B = B + U(s1:f1,:) * (Z' * omega(s2:f2,1:k));
 			else

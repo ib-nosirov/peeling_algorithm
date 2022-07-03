@@ -1,32 +1,35 @@
-n = 1000; diag_size = 125; k = 10; I = [1 n];
 % make a kernel
-rbf = @(e,r) exp(-(e*r).^2); ep = 20; d = 1;
+rbf = @(e,r) exp(-(e*r).^2); ep = 4; d = 3;
+n = 10; diag_size = 125; k = 10; I = [1 n^d];
 % Point evals at which to sample
 x = CreatePoints(n^d,d,'u');
 % compute the absolute difference
 DM = DistanceMatrix(x,x);
 % sample matrix
 K_mtrx = rbf(ep,DM);
-[U_tree Z_tree idx_tree] = NumericalExperiment(K_mtrx,n,k,diag_size,I);
+imagesc(K_mtrx)
+[U_tree Z_tree idx_tree] = NumericalExperiment(K_mtrx,n^d,k,diag_size,I);
+
+% 
 
 % reconstruct the K matrix approximation from U and Z values
-K_approx = K_mtrx;
-K_approx(1:500,501:end) = U_tree.get(2) * Z_tree.get(3)';
-K_approx(501:end,1:500) = U_tree.get(3) * Z_tree.get(2)';
-
-K_approx(1:250,251:500) = U_tree.get(4) * Z_tree.get(5)';
-K_approx(251:500,1:250) = U_tree.get(5) * Z_tree.get(4)';
-K_approx(501:750,751:end) = U_tree.get(10) * Z_tree.get(11)';
-K_approx(751:end,501:750) = U_tree.get(11) * Z_tree.get(10)';
-
-K_approx(1:125,126:250) = U_tree.get(6) * Z_tree.get(7)';
-K_approx(126:250,1:125) = U_tree.get(7) * Z_tree.get(6)';
-K_approx(251:375,376:500) = U_tree.get(8) * Z_tree.get(9)';
-K_approx(376:500,251:375) = U_tree.get(9) * Z_tree.get(8)';
-K_approx(501:625,626:750) = U_tree.get(12) * Z_tree.get(13)';
-K_approx(626:750,501:625) = U_tree.get(13) * Z_tree.get(12)';
-K_approx(751:875,876:end) = U_tree.get(14) * Z_tree.get(15)';
-K_approx(876:end,751:875) = U_tree.get(15) * Z_tree.get(14)';
+%K_approx = K_mtrx;
+%K_approx(1:500,501:end) = U_tree.get(2) * Z_tree.get(3)';
+%K_approx(501:end,1:500) = U_tree.get(3) * Z_tree.get(2)';
+%
+%K_approx(1:250,251:500) = U_tree.get(4) * Z_tree.get(5)';
+%K_approx(251:500,1:250) = U_tree.get(5) * Z_tree.get(4)';
+%K_approx(501:750,751:end) = U_tree.get(10) * Z_tree.get(11)';
+%K_approx(751:end,501:750) = U_tree.get(11) * Z_tree.get(10)';
+%
+%K_approx(1:125,126:250) = U_tree.get(6) * Z_tree.get(7)';
+%K_approx(126:250,1:125) = U_tree.get(7) * Z_tree.get(6)';
+%K_approx(251:375,376:500) = U_tree.get(8) * Z_tree.get(9)';
+%K_approx(376:500,251:375) = U_tree.get(9) * Z_tree.get(8)';
+%K_approx(501:625,626:750) = U_tree.get(12) * Z_tree.get(13)';
+%K_approx(626:750,501:625) = U_tree.get(13) * Z_tree.get(12)';
+%K_approx(751:875,876:end) = U_tree.get(14) * Z_tree.get(15)';
+%K_approx(876:end,751:875) = U_tree.get(15) * Z_tree.get(14)';
 
 %norm(K_mtrx(1:500,501:end) - U_tree.get(2) * Z_tree.get(3)','fro')...
 %/norm(K_mtrx(1:500,501:end),'fro')
