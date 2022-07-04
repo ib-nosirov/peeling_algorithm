@@ -7,7 +7,8 @@ function output = HutchPlusPlus(K,U_tree,idx_tree)
 	N = N * 2;
 	for g = 1:tree_depth
 		% Rademacher random variable.
-		G = randi([0 1],N,2*k);
+		G = randn(N,2*k);
+%		G = randi([0 1],N,2*k)
 
 		% Get all of the U matrices from this layer
 
@@ -28,7 +29,6 @@ function output = HutchPlusPlus(K,U_tree,idx_tree)
 		% Part 1: Compute tr(Q'*K*Q) exactly
 		tracePart1 = trace(Q'*K*Q) % THIS USES 2r MULTIPLIES BY K
 		tracePart2 = (1/size(G,2))*trace(G' * (eye(N)-Q*Q')*K*(eye(N)-Q*Q') * G)
-		return
 		output = output + tracePart1 + tracePart2;
 	end
 
