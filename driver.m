@@ -8,9 +8,6 @@ DM = DistanceMatrix(x,x);
 % sample matrix
 K_mtrx = rbf(ep,DM);
 [U_tree Z_tree idx_tree] = NumericalExperiment(K_mtrx,n^d,k,diag_size,I);
-
-% 
-
 % reconstruct the K matrix approximation from U and Z values
 K_approx = K_mtrx;
 K_approx(1:500,501:end) = U_tree.get(2) * Z_tree.get(3)';
@@ -34,7 +31,7 @@ norm(K_mtrx(1:500,501:end) - U_tree.get(2) * Z_tree.get(3)','fro')...
 /norm(K_mtrx(1:500,501:end),'fro')
 norm(K_mtrx(501:end,1:500) - U_tree.get(3) * Z_tree.get(2)','fro')...
 /norm(K_mtrx(501:end,1:500),'fro')
-%
+
 norm(K_mtrx(1:250,251:500) - U_tree.get(4) * Z_tree.get(5)','fro')...
 /norm(K_mtrx(1:250,251:500),'fro')
 norm(K_mtrx(251:500,1:250) - U_tree.get(5) * Z_tree.get(4)','fro')...
@@ -43,7 +40,7 @@ norm(K_mtrx(501:750,751:end) - U_tree.get(10) * Z_tree.get(11)','fro')...
 /norm(K_mtrx(501:750,751:end),'fro')
 norm(K_mtrx(751:end,501:750) - U_tree.get(11) * Z_tree.get(10)','fro')...
 /norm(K_mtrx(751:end,501:750),'fro')
-%
+
 norm(K_mtrx(1:125,126:250) - U_tree.get(6) * Z_tree.get(7)','fro')...
 /norm(K_mtrx(1:125,126:250),'fro')
 norm(K_mtrx(126:250,1:125) - U_tree.get(7) * Z_tree.get(6)','fro')...
@@ -61,6 +58,4 @@ norm(K_mtrx(751:875,876:end) - U_tree.get(14) * Z_tree.get(15)','fro')...
 norm(K_mtrx(876:end,751:875) - U_tree.get(15) * Z_tree.get(14)','fro')...
 /norm(K_mtrx(876:end,751:875),'fro')
 
-%imagesc(K_mtrx - K_approx)
 disp(abs(norm(K_mtrx - K_approx, 'fro') / norm(K_mtrx, 'fro')))
-%%end
