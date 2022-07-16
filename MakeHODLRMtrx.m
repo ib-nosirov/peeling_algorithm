@@ -1,4 +1,4 @@
-function [U_tree Z_tree idx_tree] = NumericalExperiment(K_mtrx,n,k,diag_size,I)
+function output = MakeHODLRMtrx(K_mtrx,n,k,diag_size,I)
 	% make binary tree
 	idx_tree = tree(I);
 	idx_tree = createChildren(idx_tree,1,diag_size);
@@ -17,6 +17,7 @@ function [U_tree Z_tree idx_tree] = NumericalExperiment(K_mtrx,n,k,diag_size,I)
 		% generation's indices
 		computeNextGeneration(g);
 	end
+	output = [U_tree Z_tree idx_tree];
 
 	function output = computeFirstGeneration()
 		% create a random matrix and interlace it with zeroes.
