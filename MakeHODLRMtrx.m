@@ -1,48 +1,48 @@
-function output = MakeHODLRMtrx(K_mtrx,n,k,diag_size,I)
+function output = MakeHODLRMtrx(Kmtrx,n,k,diagSize,I)
 	% make binary tree
-	idx_tree = tree(I);
-	idx_tree = createChildren(idx_tree,1,diag_size);
+	idxTree = tree(I);
+	idxTree = createChildren(idxTree,1,diagSize);
 	% store U and Z values in nodes respective to index intervals.
-	U_tree = idx_tree; Z_tree = idx_tree;
+	uTree = idxTree; zTree = idxTree;
 
 	% Layer 1
 	computeFirstGeneration();
 
 	% we need to subtract away residuals for every generation after generation
 	% 1.
-	tree_depth = log2(nnodes(idx_tree)+1) - 1;
+	treeDepth = log2(nnodes(idxTree)+1) - 1;
 	% subsequent generations. 
-	for g = 2:tree_depth
+	for g = 2:treeDepth
 		% compute the U and Z skinny matrices emerging from the next
 		% generation's indices
 		computeNextGeneration(g);
 	end
-	output = [U_tree Z_tree idx_tree];
+	output = [uTree zTree idxTree];
 
 	function output = computeFirstGeneration()
 		% create a random matrix and interlace it with zeroes.
 		omega = randn(n,2*k);
 		omega(1:n/2,1:k) = 0; omega((n/2)+1:end,k+1:end) = 0;
 		% create sample matrix
-		Y = K_mtrx * omega;
+		Y = Kmtrx * omega;
 		% index the orthogonalized sample matrix for relevant blocks
 		U2 = orth(Y(1:n/2,1:k)); U3 = orth(Y((n/2)+1:end,k+1:end));
 		% allocate space for a 'U' matrix
-		U_mtrx = zeros(n,2*k);
+		uMtrx = zeros(n,2*k);
 		% interlace orthonormal U matrix
-		U_mtrx(1:n/2,k+1:end) = U2; U_mtrx((n/2)+1:end,1:k) = U3;
+		uMtrx(1:n/2,k+1:end) = U2; uMtrx((n/2)+1:end,1:k) = U3;
 		% create the Z matrix
-		Z_mtrx = K_mtrx' * U_mtrx;
+		zMtrx = Kmtrx' * uMtrx;
 		% retrieve the relevant blocks 
-		Z2 = Z_mtrx(1:n/2,1:k); Z3 = Z_mtrx((n/2)+1:end,k+1:end);
+		Z2 = zMtrx(1:n/2,1:k); Z3 = zMtrx((n/2)+1:end,k+1:end);
 		% place in tree.
 		% K2,3 -> K2; enumerate based on the first index.
-		U_tree = U_tree.set(2,U2); Z_tree = Z_tree.set(2,Z2);
+		uTree = uTree.set(2,U2); zTree = zTree.set(2,Z2);
 		% K3
-		U_tree = U_tree.set(3,U3); Z_tree = Z_tree.set(3,Z3);
+		uTree = uTree.set(3,U3); zTree = zTree.set(3,Z3);
 		end
 
-	function no_return = computeNextGeneration(generation)
+	function noReturn = computeNextGeneration(generation)
 		% ARGS:
 		%	generation: integer representing the relevant generation in the
 		%	tree.
@@ -52,84 +52,84 @@ function output = MakeHODLRMtrx(K_mtrx,n,k,diag_size,I)
 		% DESCRIPTION: perform the peeling algorithm steps described in
 		% Martinsson/Tropp Section 20.5 (pgs 98-101).
 
-		% idx_c: index cell array of this generation's index pairs; all nodes
-		% in single generation of 'idx_tree'
-		[starting_idx idx_c] = traverseGeneration(idx_tree,generation);
-		it_idx = starting_idx-1; it = idx_tree.breadthfirstiterator;
+		% idxCell: index cell array of this generation's index pairs; all nodes
+		% in single generation of 'idxTree'
+		[sIdx idxCell] = traverseGeneration(idxTree,generation);
+		itIdx = sIdx-1; it = idxTree.breadthfirstiterator;
 		% create a random matrix and interlace it with zeros.
-		omega = randn(n,2*k); omega = interlaceMtrx(omega,idx_c);
+		omega = randn(n,2*k); omega = interlaceMtrx(omega,idxCell);
 		% create sample matrix Y.
-		Y = K_mtrx * omega;
+		Y = Kmtrx * omega;
 		% preallocate for upcoming result.
-		U_mtrx = zeros(n,2*k);
+		uMtrx = zeros(n,2*k);
 		% Create U vectors and interlace them with zeros.
-		for idx = 2:2:length(idx_c)
+		for idx = 2:2:length(idxCell)
 			% determine which blocks in the sample matrix we wish to index.
-			[s1 f1 s2 f2] = getIntervals(idx_c,idx);
+			[s1 f1 s2 f2] = getIntervals(idxCell,idx);
 			U1 = Y(s1:f1,1:k); U2 = Y(s2:f2,k+1:end);
 
 			% Compute residuals and orthogonalize the 'purified' result.
 			U1 = orth(U1 - computeResidualU([s1 f1],omega));
 			U2 = orth(U2 - computeResidualU([s2 f2],omega));
 			% interlace U1 and U2 into relevant blocks.
-			U_mtrx(s1:f1,k+1:end) = U1; U_mtrx(s2:f2,1:k) = U2;
+			uMtrx(s1:f1,k+1:end) = U1; uMtrx(s2:f2,1:k) = U2;
 			% set U values and adjust the iterator.
-			it_idx = it_idx+2;
-			U_tree = U_tree.set(it(it_idx),U2);
-			U_tree = U_tree.set(it(it_idx-1),U1);
+			itIdx = itIdx+2;
+			uTree = uTree.set(it(itIdx),U2);
+			uTree = uTree.set(it(itIdx-1),U1);
 		end
 		% create sample Z matrix
-		Z_mtrx = K_mtrx' * U_mtrx;
+		zMtrx = Kmtrx' * uMtrx;
 		% Create U vectors and interlace them with zeros.
-		it_idx = starting_idx-1;
-		for idx = 2:2:length(idx_c) 
+		itIdx = sIdx-1;
+		for idx = 2:2:length(idxCell) 
 			% determine which blocks in the sample matrix we wish to index.
-			[s1 f1 s2 f2] = getIntervals(idx_c,idx);
-			Z1 = Z_mtrx(s1:f1,1:k); Z2 = Z_mtrx(s2:f2,k+1:end);
+			[s1 f1 s2 f2] = getIntervals(idxCell,idx);
+			Z1 = zMtrx(s1:f1,1:k); Z2 = zMtrx(s2:f2,k+1:end);
 			% Compute residuals and orthogonalize the 'purified' result.
-			Z1 = Z1 - computeResidualZ([s1 f1],U_mtrx);
-			Z2 = Z2 - computeResidualZ([s2 f2],U_mtrx);
+			Z1 = Z1 - computeResidualZ([s1 f1],uMtrx);
+			Z2 = Z2 - computeResidualZ([s2 f2],uMtrx);
 			% set Z values and adjust the iterator.
-			it_idx = it_idx+2;
-			Z_tree = Z_tree.set(it(it_idx),Z2);
-			Z_tree = Z_tree.set(it(it_idx-1),Z1);
+			itIdx = itIdx+2;
+			zTree = zTree.set(it(itIdx),Z2);
+			zTree = zTree.set(it(itIdx-1),Z1);
 		end
 	end
 
-	function B = computeResidualU(curr_interval,omega)
+	function B = computeResidualU(currInterval,omega)
 		% ARGS:
-		%	curr_interval: array containing start and finish for sample matrix
+		%	currInterval: array containing start and finish for sample matrix
 		%	block.
 		%   omega: random skinny matrix interlaced with zeros.
 		% OUTPUT: vector containing residual value for sample matrix block.
-		% DESCRIPTION: (1) find the array matching 'curr_interval' and (2) the
+		% DESCRIPTION: (1) find the array matching 'currInterval' and (2) the
 		% path of parent nodes. Compute the residual by (3) matching every
 		% parent with a portion of the sample matrix.
 
 		% (1) and (2)
-		node_path = findNodeDFS(curr_interval);
+		nodePath = findNodeDFS(currInterval);
 		B = 0;
 		% (3)
 		% start with 2nd index; first index is node itself.
-		for idx = 2:length(node_path)
+		for idx = 2:length(nodePath)
 			% retrieve 'idx'th ancestor.
-			% prev_interval comes from the sibling of the ancestor node. It
+			% prevInterval comes from the sibling of the ancestor node. It
 			% determines which rows of the sample matrix to index.
-			[U Z prev_interval] = getAncestorU(idx,node_path);
+			[U Z prevInterval] = getAncestorU(idx,nodePath);
 			% what portion of the 'ancestor block' to index is determined by
 			% which rows the the current interval is in.
-			s1 = mod(curr_interval(1),length(U));
-			f1 = mod(curr_interval(2),length(U));
+			s1 = mod(currInterval(1),length(U));
+			f1 = mod(currInterval(2),length(U));
 			if f1 == 0	f1 = length(U);	end
 
 			% the columns of the previous block correspond to the rows of the
 			% skinny matrix, by definition of matrix multiplication.
-			s2 = prev_interval(1); f2 = prev_interval(2);
+			s2 = prevInterval(1); f2 = prevInterval(2);
 
 			% if a block is in the upper triangle, then we index the first k
 			% columns of omega.
 
-			if isUpperTriangleBlock(node_path(1))
+			if isUpperTriangleBlock(nodePath(1))
 				B = B + U(s1:f1,:) * (Z' * omega(s2:f2,1:k));
 			else
 				B = B + U(s1:f1,:) * (Z' * omega(s2:f2,k+1:end));
@@ -137,48 +137,48 @@ function output = MakeHODLRMtrx(K_mtrx,n,k,diag_size,I)
 		end
 	end
 
-	function B = computeResidualZ(curr_interval,U_mtrx)
+	function B = computeResidualZ(currInterval,uMtrx)
 		% ARGS:
 		%	interval: array containing start and finish for sample matrix
 		%	block.
-		%	U_mtrx: zero matrix interlaced with U skinny sub-matrices.
+		%	uMtrx: zero matrix interlaced with U skinny sub-matrices.
 		% OUTPUT: vector containing residual value for sample matrix block.
-		% DESCRIPTION: (1) find the array matching 'curr_interval' and (2) the
+		% DESCRIPTION: (1) find the array matching 'currInterval' and (2) the
 		% path of parent nodes. Compute the residual by (3) matching every
 		% parent with a portion of the sample matrix.
 
 		% (1) and (2)
-		node_path = findNodeDFS(curr_interval);
+		nodePath = findNodeDFS(currInterval);
 		B = 0;
 		% (3)
-		for idx = 2:length(node_path)
+		for idx = 2:length(nodePath)
 			% retrieve 'idx'th ancestor.
-			[U Z prev_interval] = getAncestorZ(idx,node_path);
+			[U Z prevInterval] = getAncestorZ(idx,nodePath);
 			% what portion of the 'ancestor block' to index is determined by
 			% which rows the the current interval is in.
-			s1 = mod(curr_interval(1),length(Z));
-			f1 = mod(curr_interval(2),length(Z));
+			s1 = mod(currInterval(1),length(Z));
+			f1 = mod(currInterval(2),length(Z));
 			if f1 == 0	f1 = length(Z);	end
 
 			% the columns of the previous block correspond to the rows of the
 			% skinny matrix, by definition of matrix multiplication.
-			s2 = prev_interval(1); f2 = prev_interval(2);
+			s2 = prevInterval(1); f2 = prevInterval(2);
 
 			% if a block is in the upper triangle, then we index the first k
-			% columns of U_mtrx.
-			if isUpperTriangleBlock(node_path(1))
-				B = B + Z(s1:f1,:) * (U' * U_mtrx(s2:f2,1:k));
+			% columns of uMtrx.
+			if isUpperTriangleBlock(nodePath(1))
+				B = B + Z(s1:f1,:) * (U' * uMtrx(s2:f2,1:k));
 			else
-				B = B + Z(s1:f1,:) * (U' * U_mtrx(s2:f2,k+1:end));
+				B = B + Z(s1:f1,:) * (U' * uMtrx(s2:f2,k+1:end));
 			end
 		end
 	end
 
 	% Node checks out.
-	function [U Z interval] = getAncestorU(idx,node_path)
+	function [U Z interval] = getAncestorU(idx,nodePath)
 		% ARGS:
-		%	idx: index of the node_path indicating which ancestor to retrieve.
-		%	node_path: path of ancestor nodes in the idx_tree.
+		%	idx: index of the nodePath indicating which ancestor to retrieve.
+		%	nodePath: path of ancestor nodes in the idxTree.
 		% OUTPUT: array containing an ancestor node's corresponding U block, Z
 		% block, and interval.
 		% DESCRIPTION: depending on whether the node corresponds to a block in
@@ -187,107 +187,107 @@ function output = MakeHODLRMtrx(K_mtrx,n,k,diag_size,I)
 
 		% take the first index of the block in the Tropp diagram. That
 		% corresponds to the node.
-		block_num = node_path(idx);
-		if isUpperTriangleBlock(block_num)
-			U = U_tree.get(block_num); Z = Z_tree.get(block_num+1);
+		blockNum = nodePath(idx);
+		if isUpperTriangleBlock(blockNum)
+			U = uTree.get(blockNum); Z = zTree.get(blockNum+1);
 			% the interval of the Z node is the interval of the columns of
 			% sample matrix.
-			interval = idx_tree.get(block_num+1);
+			interval = idxTree.get(blockNum+1);
 		else
-			U = U_tree.get(block_num); Z = Z_tree.get(block_num-1);
+			U = uTree.get(blockNum); Z = zTree.get(blockNum-1);
 			% the interval of the Z node is the interval of the columns of
 			% sample matrix.
-			interval = idx_tree.get(block_num-1);
+			interval = idxTree.get(blockNum-1);
 		end
 	end
 
-	function [U Z interval] = getAncestorZ(idx,node_path)
+	function [U Z interval] = getAncestorZ(idx,nodePath)
 		% ARGS:
-		%	idx: index of the node_path indicating which ancestor to retrieve.
-		%	node_path: path of ancestor nodes in the idx_tree.
+		%	idx: index of the nodePath indicating which ancestor to retrieve.
+		%	nodePath: path of ancestor nodes in the idxTree.
 		% OUTPUT: array containing an ancestor node's corresponding U block, Z
 		% block, and interval.
 		% DESCRIPTION: Same process as the for U, but the order of which node
 		% is pulled from which tree is reversed.
 
-		block_num = node_path(idx);
-		if isUpperTriangleBlock(block_num)
+		blockNum = nodePath(idx);
+		if isUpperTriangleBlock(blockNum)
 			% order is reversed.
-			Z = Z_tree.get(block_num); U = U_tree.get(block_num+1);
+			Z = zTree.get(blockNum); U = uTree.get(blockNum+1);
 			% the interval of the Z node is the interval of the columns of
 			% sample matrix.
-			interval = idx_tree.get(block_num+1);
+			interval = idxTree.get(blockNum+1);
 		else
 			% order is reversed.
-			Z = Z_tree.get(block_num); U = U_tree.get(block_num-1);
+			Z = zTree.get(blockNum); U = uTree.get(blockNum-1);
 			% the interval of the Z node is the interval of the columns of
 			% sample matrix.
-			interval = idx_tree.get(block_num-1);
+			interval = idxTree.get(blockNum-1);
 		end
 	end
 
-	function bool_value = isUpperTriangleBlock(block_num)
+	function boolVal = isUpperTriangleBlock(blockNum)
 		% ARGS:
-		%	block_num: integer value corresponding to submatrix blocks/node
+		%	blockNum: integer value corresponding to submatrix blocks/node
 		%	number.
 		% OUTPUT: boolean value.
 		% DESCRIPTION: all blocks in the upper triangle are defined to have
 		% even values.
-		bool_value = (mod(block_num,2) == 0);
+		boolVal = (mod(blockNum,2) == 0);
 	end
 
-	function node_path = findNodeDFS(interval)
+	function nodePath = findNodeDFS(interval)
 		% ARGS:
-		%	interval: array with indices corresponding to a node in idx_tree.
+		%	interval: array with indices corresponding to a node in idxTree.
 		% OUTPUT: array of all ancestors of a node containing 'interval'.
 		% DESCRIPTION: do a depth first search to retrieve all of a given
 		% node's ancestors.
 		
 		% iterator array with DFS arrangement of indices.
-		it_a = idx_tree.depthfirstiterator;
-		for idx = 1:length(it_a)
+		itArr = idxTree.depthfirstiterator;
+		for idx = 1:length(itArr)
 			% find the node in the tree by comparing to other intervals in
-			% idx_tree.
-			if all(idx_tree.get(it_a(idx)) == interval)
+			% idxTree.
+			if all(idxTree.get(itArr(idx)) == interval)
 				% get all of the ancestor nodes leading back to index 1.
-				node_path = idx_tree.findpath(it_a(idx), 1);
+				nodePath = idxTree.findpath(itArr(idx), 1);
 				% discard the first (irrelevant) and last node (node can't be a
 				% parent of itself).
-				node_path = node_path(1:end-1);
+				nodePath = nodePath(1:end-1);
 				return
 			end
 		end
 	end
 
-	function mtrx = interlaceMtrx(mtrx,idx_c)
+	function mtrx = interlaceMtrx(mtrx,idxCell)
 		% ARGS:
 		%	mtrx: input matrix to be interlaced.
-		%	idx_c: cell array containing indices at this genration in the tree.
+		%	idxCell: cell array containing indices at this genration in the tree.
 		% OUTPUT: same input matrix interlaced with zeros in some blocks.
 		% DESCRIPTION: loop through each block corresponding to the intervals
 		% at a given generation and set that block to zero.
-		for idx = 2:2:length(idx_c) 
-			[s1 f1 s2 f2] = getIntervals(idx_c,idx);
+		for idx = 2:2:length(idxCell) 
+			[s1 f1 s2 f2] = getIntervals(idxCell,idx);
 			mtrx(s1:f1,1:k) = 0; mtrx(s2:f2,k+1:end) = 0;
 		end
 	end
 
-	function [s1 f1 s2 f2] = getIntervals(idx_c,idx)
+	function [s1 f1 s2 f2] = getIntervals(idxCell,idx)
 		% ARGS:
-		% 	idx_c: cell array with nodes of the idx_tree for this generation.
-		%	idx: node in the idx_tree whose start and finish values we need.
+		% 	idxCell: cell array with nodes of the idxTree for this generation.
+		%	idx: node in the idxTree whose start and finish values we need.
 		% OUTPUT: array containing the start and finish indices of two sibling
-		% nodes in idx_tree.
+		% nodes in idxTree.
 		% DESCRIPTION: Extract the start and finish indices of two sibling
-		% nodes in the idx_tree by traversing those nodes through idx_c.
+		% nodes in the idxTree by traversing those nodes through idxCell.
 
 		% start and finish indices of sibling
-		s1 = table(idx_c{idx-1}).Var1(1); f1 = table(idx_c{idx-1}).Var1(2);
+		s1 = table(idxCell{idx-1}).Var1(1); f1 = table(idxCell{idx-1}).Var1(2);
 		% start and finish indices of node represented by 'idx'.
-		s2 = table(idx_c{idx}).Var1(1); f2 = table(idx_c{idx}).Var1(2);
+		s2 = table(idxCell{idx}).Var1(1); f2 = table(idxCell{idx}).Var1(2);
 	end
 
-	function [s idx_c] = traverseGeneration(btree,g)
+	function [s idxCell] = traverseGeneration(btree,g)
 		% ARGS:
 		%	btree: binary tree with at least 1 generation.
 		%	g: the generation whose nodes must be retrieved.
@@ -296,7 +296,7 @@ function output = MakeHODLRMtrx(K_mtrx,n,k,diag_size,I)
 		% array.
 		it = btree.breadthfirstiterator; s = 2^g; f = 2*s-1;
 		% preallocate memory.
-		[idx_c{1:(f-s)}] = deal([]);
-		for idx = s:f	idx_c{idx-(s-1)} = btree.get(it(idx));	end
+		[idxCell{1:(f-s)}] = deal([]);
+		for idx = s:f	idxCell{idx-(s-1)} = btree.get(it(idx));	end
 	end
 end

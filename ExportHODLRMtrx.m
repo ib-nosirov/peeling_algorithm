@@ -7,22 +7,26 @@ x = CreatePoints(n^d,d,'u');
 DM = DistanceMatrix(x,x);
 % sample matrix
 Kmtrx = rbf(ep,DM);
-exportToPython(MakeHODLRMtrx(Kmtrx,n^d,k,diagSize,I),k,'HODLR_mtrx.mat')
+b = ones(n,1);
+%y = Kmtrx * b;
+%y;
 
-function noReturn = exportToPython(HODLRMtrx,approxLowRank,name)
-	u_tree = prepTree(HODLRMtrx(1),approxLowRank);
-	z_tree = prepTree(HODLRMtrx(2),approxLowRank);
-	idx_tree = prepTree(HODLRMtrx(3),1);
+exportToPython(MakeHODLRmtrx(Kmtrx,n^d,k,diagSize,I),'HODLR_mtrx.mat');
+
+function noReturn = exportToPython(HODLRMtrx,name)
+	% HODLRMtrx(3): idxTree
+	u_tree = prepTree(HODLRMtrx(1));
+	z_tree = prepTree(HODLRMtrx(2));
+	idx_tree = prepTree(HODLRMtrx(3));
 	save(sprintf('../HODLR_SLQ/%s',name),'u_tree','z_tree','idx_tree','-v7');
 end
 
-function treeContainer = prepTree(tree,k)
+function treeContainer = prepTree(tree)
 	itArr = tree.breadthfirstiterator;
-	nodeLength = length(tree.get(itArr(2)));
+	% preallocate memory.
 	% note that we are discarding the first index 
-	treeContainer = zeros(nodeLength,k,length(itArr)-1);
+	[treeContainer{1:length(itArr)-1}] = deal([]);
 	for iNode=2:length(itArr)
-		nodeLength = length(tree.get(itArr(iNode)));
-		treeContainer(1:nodeLength,:,iNode-1) = tree.get(itArr(iNode));
+		treeContainer{iNode-1} = tree.get(itArr(iNode));
 	end
 end
