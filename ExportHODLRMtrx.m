@@ -11,14 +11,14 @@ b = ones(n,1);
 %y = Kmtrx * b;
 %y;
 
-exportToPython(MakeHODLRmtrx(Kmtrx,n^d,k,diagSize,I),'HODLR_mtrx.mat');
+exportToPython(MakeHODLRMtrx(kMtrx,n^d,k,diagSize,I),'HODLR_mtrx.mat');
 
 function noReturn = exportToPython(HODLRMtrx,name)
-	% HODLRMtrx(3): idxTree
-	u_tree = prepTree(HODLRMtrx(1));
-	z_tree = prepTree(HODLRMtrx(2));
-	idx_tree = prepTree(HODLRMtrx(3));
-	save(sprintf('../HODLR_SLQ/%s',name),'u_tree','z_tree','idx_tree','-v7');
+	u_tree = prepTree(HODLRMtrx{1});
+	z_tree = prepTree(HODLRMtrx{2});
+	leaves_cell = HODLRMtrx{3};
+	idx_tree = prepTree(HODLRMtrx{4});
+	save(sprintf('../HODLR_SLQ/%s',name),'u_tree','z_tree','leaves_cell','idx_tree','-v7');
 end
 
 function treeContainer = prepTree(tree)
