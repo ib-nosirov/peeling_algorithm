@@ -16,7 +16,10 @@ idxTree = output{4};
 kApproxDims = size(kMtrx);
 kApprox = zeros(kApproxDims(1),kApproxDims(2));
 it = idxTree.breadthfirstiterator;
-for idx=3:2:nnodes(idxTree)-8
+treeDepth = floor(log2(nnodes(idxTree)+1));
+offset = length(it)-2^(treeDepth-1)
+
+for idx=3:2:nnodes(idxTree)-2^(treeDepth-1)
 	s1 = table(idxTree.get(it(idx-1))).Var1(1);
 	f1 = table(idxTree.get(it(idx-1))).Var1(2);
 	s2 = table(idxTree.get(it(idx))).Var1(1);
@@ -25,8 +28,8 @@ for idx=3:2:nnodes(idxTree)-8
 	kApprox(s2:f2,s1:f1) = uTree.get(it(idx)) * zTree.get(it(idx-1))';
 end
 for idx=1:length(leavesCell)
-	s = table(idxTree.get(it(idx+15))).Var1(1);
-	f = table(idxTree.get(it(idx+15))).Var1(2);
+	s = table(idxTree.get(it(idx+offset))).Var1(1);
+	f = table(idxTree.get(it(idx+offset))).Var1(2);
 	kApprox(s:f,s:f) = leavesCell{idx};
 end
 disp(abs(norm(kMtrx - kApprox, 'fro') / norm(kMtrx, 'fro')))

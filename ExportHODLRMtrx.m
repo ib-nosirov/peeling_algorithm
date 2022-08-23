@@ -8,8 +8,8 @@ DM = DistanceMatrix(x,x);
 % sample matrix
 Kmtrx = rbf(ep,DM);
 b = ones(n,1);
-%y = Kmtrx * b;
-%y;
+y = Kmtrx*b;
+save(sprintf('../HODLR_SLQ/%s','y'),'y','-v7');
 
 exportToPython(MakeHODLRMtrx(kMtrx,n^d,k,diagSize,I),'HODLR_mtrx.mat');
 

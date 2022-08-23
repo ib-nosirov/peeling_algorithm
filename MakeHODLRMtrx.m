@@ -1,6 +1,5 @@
 function output = MakeHODLRMtrx(Kmtrx,n,k,diagSize,I)
 	idxTree = tree(I);
-	% checks out.
 	idxTree = createChildren(idxTree,1,diagSize);
 	uTree = idxTree; zTree = idxTree;
 
@@ -19,7 +18,7 @@ function output = MakeHODLRMtrx(Kmtrx,n,k,diagSize,I)
 		U2 = orth(Y(1:n/2,1:k)); U3 = orth(Y((n/2)+1:end,k+1:end));
 		uMtrx = zeros(n,2*k);
 		uMtrx(1:n/2,k+1:end) = U2; uMtrx((n/2)+1:end,1:k) = U3;
-		zMtrx = Kmtrx' * uMtrx;
+		zMtrx = Kmtrx'*uMtrx;
 		Z2 = zMtrx(1:n/2,1:k); Z3 = zMtrx((n/2)+1:end,k+1:end);
 		uTree = uTree.set(2,U2); zTree = zTree.set(2,Z2);
 		uTree = uTree.set(3,U3); zTree = zTree.set(3,Z3);
