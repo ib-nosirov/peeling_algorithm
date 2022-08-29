@@ -11,7 +11,7 @@ b = ones(n,1);
 y = Kmtrx*b;
 save(sprintf('../HODLR_SLQ/%s','y'),'y','-v7');
 
-exportToPython(MakeHODLRMtrx(kMtrx,n^d,k,diagSize,I),'HODLR_mtrx.mat');
+exportToPython(MakeHODLRMtrx(Kmtrx,n^d,k,diagSize,I),'HODLR_mtrx.mat');
 
 function noReturn = exportToPython(HODLRMtrx,name)
 	u_tree = prepTree(HODLRMtrx{1});
