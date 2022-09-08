@@ -9,7 +9,7 @@ function output = MakeHODLRMtrx(Kmtrx,n,k,diagSize,I)
 		computeNextGeneration(g);
 	end
 	leavesCell = computeLeaves(treeDepth);
-	output = {uTree zTree leavesCell idxTree};
+	output = {uTree,zTree,leavesCell,idxTree};
 
 	function noReturn = computeFirstGeneration()
 		omega = randn(n,2*k);
@@ -56,7 +56,7 @@ function output = MakeHODLRMtrx(Kmtrx,n,k,diagSize,I)
 	end
 
 	function leavesCell = computeLeaves(generation)
-		% stack (numbber of leaves) identity blocks:
+		% stack (number of leaves) identity blocks:
 		idxCell = traverseLeafGeneration(idxTree,generation);
 		eyeBlockLen = table(idxCell{1}).Var1(2);
 		eyeBlocksNum = length(idxCell);
