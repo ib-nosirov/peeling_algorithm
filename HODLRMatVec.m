@@ -26,12 +26,12 @@ function y = HODLRMatVec(A,b)
 			u = uTree.get(it(ii));
 			z = zTree.get(it(ii-1));
 		end
-		y(s:f) = y(s:f) + u*(z'*b(s:f));
+		y(s:f,:) = y(s:f) + u*(z'*b(s:f,:));
 	end
 	% leaves
 	for ii = nonLeafNodes+1:numNodes
 		interval = idxTree.get(it(ii));
 		s = interval(1); f = interval(2);
-		y(s:f) = y(s:f) + leavesCell{ii-nonLeafNodes}*b(s:f);
+		y(s:f,:) = y(s:f,:) + leavesCell{ii-nonLeafNodes}*b(s:f,:);
 	end
 end
