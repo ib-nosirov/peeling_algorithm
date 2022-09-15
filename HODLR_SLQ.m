@@ -19,4 +19,3 @@ for ii=1:nv
     Gamma = Gamma + sum(t.*theta');
 end
 Gamma = n/nv * Gamma
-
