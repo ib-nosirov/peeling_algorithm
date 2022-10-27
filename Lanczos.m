@@ -35,7 +35,9 @@
 %            from largest to smallest!)
 %     for mm1 to mm2 smallest and mm1 to mm2 largest eigenvalues
 % 
-function T = Lanczos(A,q,m)
+% Lanczos needs to take in function handle rather than function
+
+function T = Lanczos(kMtrxFcn,q,m)
       qq = q/norm(q);
       Q = qq;
       alpha = zeros(m,1);
@@ -43,8 +45,8 @@ function T = Lanczos(A,q,m)
 
       for i=1:m
             if (rem(i,10)==0)
-      end
-            z = A*qq;
+            end
+            z = kMtrxFcn(qq);
             alpha(i) = qq'*z;
             % reorthogonalize twice to guarantee orthogonality of Lanczos
             % vectors
