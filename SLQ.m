@@ -5,7 +5,7 @@ Gamma = 0;
 for ii=1:nv
     v = 2*round(rand(n,1))-1; v = v/norm(v);
     T = Lanczos(kMtrxFcn,v,m+1);
-    [Y,Theta] = eig(T);
+    [Y,Theta] = eigs(T);
     t = Y(1,:);
     t = t.^2;
     theta = diag(Theta);

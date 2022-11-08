@@ -5,10 +5,10 @@ close all;
 %profile on
 nArr = (1:10)*1000;
 % make C6 Matern kernel
-kernel = @(e,r) (1+e*r+2/5*(e*r).^2+1/15*(e*r).^3).*exp(-e*r); ep=10; d=1;
+kernel = @(e,r) (1+e*r+2/5*(e*r).^2+1/15*(e*r).^3).*exp(-e*r); ep=1; d=1;
 
-%for ii=1:length(nArr)
-    n=1000; diagSize=130*1; r=4; I=[1 n^d]; maxBlockSize=500;
+for ii=1:length(nArr)
+    n=nArr(ii); diagSize=130*ii; r=4; I=[1 n^d]; maxBlockSize=500;
     % Point evals at which to sample
     x = CreatePoints(n^d,d,'u');
     % make kernel matrix and multiply on demand
@@ -16,12 +16,12 @@ kernel = @(e,r) (1+e*r+2/5*(e*r).^2+1/15*(e*r).^3).*exp(-e*r); ep=10; d=1;
     % sample matrix
     tic
     A = MakeHODLRMtrx(kMtrxFcn,n,r,diagSize,I);
-    HODLR_Gamma = HODLR_SLQ(A,n,@log,50,10)
+    HODLR_Gamma = HODLR_SLQ(A,n,@log,100,10)
     toc
     tic
-    SLQ(kMtrxFcn,n,@log,50,10)
+    Vanilla_Gamma = SLQ(kMtrxFcn,n,@log,100,10)
     toc
-%end
+end
 
 % A = rbf(ep,DM);
 % SaveSquareMatrix(A,maxBlockSize); % <- check maxBlockSize
