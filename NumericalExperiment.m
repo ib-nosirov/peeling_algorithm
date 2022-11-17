@@ -28,6 +28,8 @@ for ii=1:length(nArr)
     tic
     Vanilla_Gamma = SLQ(kMtrxFcn,n,@log,100,10)
     toc
+%     DM = DistanceMatrix(x,x);
+%     A = kernel(ep,DM);
 end
 
 % A = rbf(ep,DM);
