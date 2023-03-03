@@ -14,10 +14,15 @@ d = 1;
     x = CreatePoints(n^d,d,'u');
     % make kernel matrix and multiply on demand
     kMtrxFcn = @(b) M*b;
-    % sample matrix
+    % sample matrix; has to be logm here since the below 2 lines are
+    % equivalent.
+    trace(logm(M))
+    %sum(log(eig(M)))
 %    tic
-    A = MakeHODLRMtrx(kMtrxFcn,n,r,diagSize,I);
-    HODLR_Gamma = HODLR_SLQ(A,n,@log,50,10)
+    M = MakeHODLRMtrx(kMtrxFcn,n,r,diagSize,I);
+    % has to be @log here since we take log(eig(T))
+    HODLR_Gamma = HODLR_SLQ(M,n,@log,50,10)
+    Gamma = SLQ(kMtrxFcn,n,@log,50,10)
 %    toc
 %end
 

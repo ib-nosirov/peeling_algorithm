@@ -9,17 +9,16 @@ function T = Lanczos(kMtrxFcn,q,m)
       alpha = zeros(m,1);
       beta = alpha;
 
-      for i=1:m
+      for ii=1:m
             z = kMtrxFcn(qq);
-            alpha(i) = qq'*z;
+            alpha(ii) = qq'*z;
             % reorthogonalize twice to guarantee orthogonality of Lanczos
             % vectors
             z = z - Q*(Q'*z);
             z = z - Q*(Q'*z);
-            beta(i) = norm(z);
-            qq = z/beta(i);
+            beta(ii) = norm(z);
+            qq = z/beta(ii);
             Q = [Q,qq];
       end
       T = diag(alpha(1:m)) + diag(beta(1:m-1),1) + diag(beta(1:m-1),-1);
-
 end
