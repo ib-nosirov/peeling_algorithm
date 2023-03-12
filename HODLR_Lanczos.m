@@ -1,8 +1,8 @@
 % Matlab code LanczosFullReorthog.m
 % For "Applied Numerical Linear Algebra",  Chapter 7, section 3
 % Written by James Demmel, Jun  6, 1997
-%
-% Perform Lanczos with complete reorthogonalization
+% Extended by Ibrohim Nosirov, Sept 6, 2022
+% Perform HODLR-Lanczos with complete reorthogonalization
 function T = HODLR_Lanczos(A,q,m)
       qq = q/norm(q);
       Q = qq;

@@ -1,11 +1,15 @@
+% Gaussian kernel
+% mirror lower triangular to upper triangular (is this necessary?)
 % Test MakeHODLRMtrx
 close all;
 nArr = [1024,2048,4096];
 for ii=1:length(nArr)
 	n = nArr(ii); d=1; diagSize=130; r=10; I=[1 n^d];
-	M = randn(n);
-    M = M*M';
-	kMtrxFcn = @(b) M*b;
+    dim2Points = randn(n,2);
+    rbfKernel = @(x,y) exp(-norm(x-y)^2);
+    M = maximin2dReordering(rbfKernel,dim2Points);
+    M = tril(M)+tril(M,-1)';
+    kMtrxFcn = @(b) M*b;
 	% Point evals at which to sample
 	%x = CreatePoints(n^d,d,'u');
 	% compute the absolute difference

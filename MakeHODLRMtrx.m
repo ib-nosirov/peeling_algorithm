@@ -64,7 +64,7 @@ function output = MakeHODLRMtrx(kMtrxFcn,n,k,diagSize,I)
 		[leavesCell{1:eyeBlocksNum}] = deal([]);
 		eyeStack = repmat(eye(eyeBlockLen),eyeBlocksNum,1);
 		output = kMtrxFcn(eyeStack);
-		for idx = 2:2:length(idxCell)
+		for idx = 2:2:eyeBlocksNum
 			[s1,f1,s2,f2] = getIntervals(idxCell,idx);
 			leaf1 = output(s1:f1,:)-...
 					computeResidual(uTree,zTree,[s1 f1],eyeStack,1);
