@@ -1,8 +1,9 @@
 function output = MakeHODLRMtrx(kMtrxFcn,n,k,diagSize,I)
+	% initialize index tree.
 	idxTree = tree(I);
 	idxTree = createChildren(idxTree,1,diagSize);
 	uTree = idxTree; zTree = idxTree;
-
+	% main
 	computeFirstGeneration();
 	treeDepth = floor(log2(nnodes(idxTree)+1));
 	for g = 2:treeDepth-1
@@ -11,23 +12,35 @@ function output = MakeHODLRMtrx(kMtrxFcn,n,k,diagSize,I)
 	leavesCell = computeLeaves(treeDepth);
 	output = {uTree,zTree,leavesCell,idxTree};
 
+	% helper functions.
+
 	function computeFirstGeneration()
+		% reference: PG. Martinsson, J. Tropp, 2020: pg 100-101
+		% randomly sample the largest blocks of the matrix.
 		omega = randn(n,2*k);
 		omega(1:n/2,1:k) = 0; omega((n/2)+1:end,k+1:end) = 0;
 		Y = kMtrxFcn(omega);
 		U2 = orth(Y(1:n/2,1:k)); U3 = orth(Y((n/2)+1:end,k+1:end));
 		uMtrx = zeros(n,2*k);
+		% interlace in the opposite order (Fig 13).
 		uMtrx(1:n/2,k+1:end) = U2; uMtrx((n/2)+1:end,1:k) = U3;
+        % need an optional input that allows for adjoint
 		zMtrx = kMtrxFcn(uMtrx);
 		Z2 = zMtrx(1:n/2,1:k); Z3 = zMtrx((n/2)+1:end,k+1:end);
 		uTree = uTree.set(2,U2); zTree = zTree.set(2,Z2);
 		uTree = uTree.set(3,U3); zTree = zTree.set(3,Z3);
-		end
+	end
 
 	function computeNextGeneration(generation)
+		% each generation has associated indices in the matrix; these indices
+		% are organized in an index tree.
+		% The zTree and uTree have associated cell arrays for the compressed
+		% versions of the matrix blocks.
 		[startIdx,idxCell] = traverseGeneration(idxTree,generation);
-		itIdx = startIdx-1; it = idxTree.breadthfirstiterator;
-		omega = randn(n,2*k); omega = interlaceMtrx(omega,idxCell);
+		itIdx = startIdx-1;
+		it = idxTree.breadthfirstiterator;
+		omega = randn(n,2*k);
+		omega = interlaceMtrx(omega,idxCell);
 		Y = kMtrxFcn(omega);
 		uMtrx = zeros(n,2*k);
 		for idx = 2:2:length(idxCell)
@@ -122,6 +135,7 @@ function output = MakeHODLRMtrx(kMtrxFcn,n,k,diagSize,I)
 	end
 
 	function nodePath = findNodeDFS(interval)
+		% find a node using depth-first search.
 		itArr = idxTree.depthfirstiterator;
 		for idx = 1:length(itArr)
 			if all(idxTree.get(itArr(idx)) == interval)
@@ -140,8 +154,10 @@ function output = MakeHODLRMtrx(kMtrxFcn,n,k,diagSize,I)
 	end
 
 	function [s1,f1,s2,f2] = getIntervals(idxCell,idx)
-		s1 = table(idxCell{idx-1}).Var1(1); f1 = table(idxCell{idx-1}).Var1(2);
-		s2 = table(idxCell{idx}).Var1(1); f2 = table(idxCell{idx}).Var1(2);
+		s1 = table(idxCell{idx-1}).Var1(1);
+		f1 = table(idxCell{idx-1}).Var1(2);
+		s2 = table(idxCell{idx}).Var1(1);
+		f2 = table(idxCell{idx}).Var1(2);
 	end
 
 	function [s,idxCell] = traverseGeneration(btree,g)

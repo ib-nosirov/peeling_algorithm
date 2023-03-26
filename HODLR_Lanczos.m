@@ -3,6 +3,7 @@
 % Written by James Demmel, Jun  6, 1997
 % Extended by Ibrohim Nosirov, Sept 6, 2022
 % Perform HODLR-Lanczos with complete reorthogonalization
+% the code can be one function.
 function T = HODLR_Lanczos(A,q,m)
       qq = q/norm(q);
       Q = qq;

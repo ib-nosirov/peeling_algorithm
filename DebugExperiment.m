@@ -1,18 +1,25 @@
 % Test MakeHODLRMtrx
 close all;
-nArr = [1024,2048,4096];
+nArr = [1024];
 for ii=1:length(nArr)
-	n = nArr(ii); d=1; diagSize=130; r=10; I=[1 n^d];
-	M = randn(n);
+	n = nArr(ii); d=1; diagSize=130; r=4; I=[1 n^d];
+	M = randn(n,10);
     M = M*M';
-	kMtrxFcn = @(b) M*b;
+    M = M + 1e-3*eye(n);
+	%kMtrxFcn = @(b) M*b;
+    
 	% Point evals at which to sample
-	%x = CreatePoints(n^d,d,'u');
+	x = CreatePoints(n^d,d,'u');
 	% compute the absolute difference
-	%DM = DistanceMatrix(x,x);
+	DM = DistanceMatrix(x,x);
+    kernel = @(e,r) (1+e*r+2/5*(e*r).^2+1/15*(e*r).^3).*exp(-e*r); ep=10; d=1;
+    M = kernel(ep,DM);
+    M = M + 1e-1*eye(n);
+%    M = M + triu(M);
+    kMtrxFcn = @(b) M*b;
 	% sample matrix
 	%kMtrx = kMtrxFcn(ep,DM);
-
+    % Assume it's symmetric
 	K = MakeHODLRMtrx(kMtrxFcn,n^d,r,diagSize,I);
 
 	% reconstruct the K matrix approximation from U and Z values
@@ -24,39 +31,57 @@ for ii=1:length(nArr)
 	it = idxTree.breadthfirstiterator;
 	treeDepth = floor(log2(nnodes(idxTree)+1));
 	offset = length(it)-2^(treeDepth-1);
-	
-	for idx=3:2:nnodes(idxTree)-2^(treeDepth-1)
+    % this code works. relative reconstruction error = 4.4765e-14
+    for idx=3:2:nnodes(idxTree)-2^(treeDepth-1)
 		s1 = table(idxTree.get(it(idx-1))).Var1(1);
 		f1 = table(idxTree.get(it(idx-1))).Var1(2);
 		s2 = table(idxTree.get(it(idx))).Var1(1);
 		f2 = table(idxTree.get(it(idx))).Var1(2);
 		kApprox(s1:f1,s2:f2) = uTree.get(it(idx-1)) * zTree.get(it(idx))';
 		kApprox(s2:f2,s1:f1) = uTree.get(it(idx)) * zTree.get(it(idx-1))';
-	end
-	for idx=1:length(leavesCell)
+    end
+    for idx=1:length(leavesCell)
 		s = table(idxTree.get(it(idx+offset))).Var1(1);
 		f = table(idxTree.get(it(idx+offset))).Var1(2);
 		kApprox(s:f,s:f) = leavesCell{idx};
-	end
-	relativeReconstructionError = abs(norm(M-kApprox,'fro')/norm(M,'fro'))
-	figure(ii)
-	imagesc(M-kApprox)
+    end
+    % reconstruct matrix by matrix multiply. Fails
+    kApproxMatVec = HODLRMatVec(K,eye(n));
+
+	%relativeReconstructionError = abs(norm(M-kApprox,'fro')/norm(M,'fro'))
+	%figure(ii)
+	%imagesc(abs(M-kApprox)./abs(M))
+    %colorbar
     
-    % Test HODLRMatVec
-    b = ones(n,1);
+    % Test HODLRMatVec    
+    b = randn(n,1);
     yApprox = HODLRMatVec(K,b);
     yExact = M*b;
     matVecRelativeError = abs(norm(yExact-yApprox,'fro')/norm(yExact,'fro'))
-
+%%
     % Test Lanczos and HODLR-Lanczos % Relative error of 0.4007
     q = randn(n,1);
     m = 10;
     exactLanczos = Lanczos(kMtrxFcn,q,m);
-    approxLanczos = HODLR_Lanczos(K,q,m);
+    %approxLanczos = HODLR_Lanczos(K,q,m);
     relativeLanczosError = abs(norm(exactLanczos-approxLanczos,'fro')/norm(exactLanczos,'fro'))
     
     % Test HODLR-SLQ and SLQ
     MATLAB_Gamma = trace(logm(M))
-    HODLR_Gamma = HODLR_SLQ(K,n,@log,50,10)
-    SLQ_Gamma = SLQ(kMtrxFcn,n,@log,50,10)
+  %  rng(1);
+    HODLR_Gamma = HODLR_SLQ(K,n,@log,100,50)
+   % rng(1);
+    HODLR_Gamma = SLQ(@(b) HODLRMatVec(K,b),n,@log,100,50)
+  %  rng(1);
+    SLQ_Gamma = SLQ(kMtrxFcn,n,@log,100,50)
+
+    % TODO:
+    % 1. how much variability until we control error.
+    % 2. 1 lanczos and 1 SLQ.
+    % 3. conditioning on M.
+    % 4. Look at the J. Tropp X-Trace paper.
+    % 5. how small can the matrix be (can we validate against MATLB)?
+    % 6. fix the zero-padding issues
+    % 7. Good log(det()) code.
+    % 8. Functions of Matrices J. Higham (f(A)b problem)
 end
