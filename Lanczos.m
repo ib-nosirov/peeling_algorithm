@@ -3,14 +3,14 @@
 % Written by James Demmel, Jun  6, 1997
 %
 % Perform Lanczos with complete reorthogonalization
-function T = Lanczos(kMtrxFcn,q,m)
+function T = Lanczos(linearOperator,q,m)
       qq = q/norm(q);
       Q = qq;
       alpha = zeros(m,1);
       beta = alpha;
 
       for ii=1:m
-            z = kMtrxFcn(qq);
+            z = linearOperator(qq);
             alpha(ii) = qq'*z;
             % reorthogonalize twice to guarantee orthogonality of Lanczos
             % vectors

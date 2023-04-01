@@ -59,29 +59,25 @@ for ii=1:length(nArr)
     yExact = M*b;
     matVecRelativeError = abs(norm(yExact-yApprox,'fro')/norm(yExact,'fro'))
 %%
-    % Test Lanczos and HODLR-Lanczos % Relative error of 0.4007
+    % Test Lanczos and HODLR-Lanczos % Relative error of 1.00e-14.
     q = randn(n,1);
     m = 10;
     exactLanczos = Lanczos(kMtrxFcn,q,m);
-    %approxLanczos = HODLR_Lanczos(K,q,m);
-    relativeLanczosError = abs(norm(exactLanczos-approxLanczos,'fro')/norm(exactLanczos,'fro'))
-    
+    approxLanczos = Lanczos(@(b) HODLRMatVec(K,b),q,m);
+    relativeLanczosError = abs(norm(exactLanczos-approxLanczos,'fro') ...
+        /norm(exactLanczos,'fro'))
+ %%
     % Test HODLR-SLQ and SLQ
     MATLAB_Gamma = trace(logm(M))
-  %  rng(1);
-    HODLR_Gamma = HODLR_SLQ(K,n,@log,100,50)
-   % rng(1);
-    HODLR_Gamma = SLQ(@(b) HODLRMatVec(K,b),n,@log,100,50)
-  %  rng(1);
-    SLQ_Gamma = SLQ(kMtrxFcn,n,@log,100,50)
-
+    SLQ_Gamma = SLQ(kMtrxFcn,n,@log,500,500)
+    HODLR_Gamma = SLQ(@(b) HODLRMatVec(K,b),n,@log,500,500)
     % TODO:
-    % 1. how much variability until we control error.
-    % 2. 1 lanczos and 1 SLQ.
-    % 3. conditioning on M.
+    % 1. how much variability until we control error?
+    % 3. conditioning on M instead of kernel matrix.
     % 4. Look at the J. Tropp X-Trace paper.
-    % 5. how small can the matrix be (can we validate against MATLB)?
-    % 6. fix the zero-padding issues
-    % 7. Good log(det()) code.
+    % 5. how small can the matrix be (can we validate against MATLAB)?
+    % 6. fix the zero-padding issues (U matrix inside of MakeHODLRMatrix)
+    % 7. Find good log(det()) code.
     % 8. Functions of Matrices J. Higham (f(A)b problem)
+    % 9. Try this with an actual kernel.
 end
