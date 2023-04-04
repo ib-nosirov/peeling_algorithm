@@ -1,6 +1,11 @@
 % Test MakeHODLRMtrx
 close all;
-nArr = [1024];
+nArr = [1024,2048,4096,8192];
+mArr = 10; % we start seeing 2 orders of magnitude dropoff when m < 300.
+nvArr= 100; % not much of a difference, nv > m, but m should also be large.
+numTrials = 1;
+% need more samples to know for sure.
+data = zeros(length(nArr),length(mArr),length(nvArr));
 for ii=1:length(nArr)
 	n = nArr(ii); d=1; diagSize=130; r=4; I=[1 n^d];
 	M = randn(n,10);
@@ -57,7 +62,8 @@ for ii=1:length(nArr)
     b = randn(n,1);
     yApprox = HODLRMatVec(K,b);
     yExact = M*b;
-    matVecRelativeError = abs(norm(yExact-yApprox,'fro')/norm(yExact,'fro'))
+    matVecRelativeError = abs(norm(yExact-yApprox,'fro')/ ...
+        norm(yExact,'fro'));
 %%
     % Test Lanczos and HODLR-Lanczos % Relative error of 1.00e-14.
     q = randn(n,1);
@@ -65,13 +71,39 @@ for ii=1:length(nArr)
     exactLanczos = Lanczos(kMtrxFcn,q,m);
     approxLanczos = Lanczos(@(b) HODLRMatVec(K,b),q,m);
     relativeLanczosError = abs(norm(exactLanczos-approxLanczos,'fro') ...
-        /norm(exactLanczos,'fro'))
+        /norm(exactLanczos,'fro'));
  %%
-    % Test HODLR-SLQ and SLQ
-    MATLAB_Gamma = trace(logm(M))
-    SLQ_Gamma = SLQ(kMtrxFcn,n,@log,500,500)
-    HODLR_Gamma = SLQ(@(b) HODLRMatVec(K,b),n,@log,500,500)
+    for jj=1:length(mArr)
+        for kk=1:length(nvArr)
+            trialsSum = 0;
+            for ll=1:numTrials
+            % Test HODLR-SLQ and SLQ
+            tic
+            MATLAB_Gamma = trace(logm(M));
+            toc
+            tic
+            SLQ_Gamma = SLQ(kMtrxFcn,n,@log,mArr(jj),nvArr(kk));
+            toc
+            MATLAB_Gamma-SLQ_Gamma
+            tic
+            HODLR_Gamma = SLQ(@(b) HODLRMatVec(K,b),n,@log,mArr(jj), ...
+            nvArr(kk));
+            toc
+            MATLAB_Gamma-HODLR_Gamma
+            %trialsSum = trialsSum + abs(MATLAB_Gamma-HODLR_Gamma);
+            end
+            data(ii,jj,kk) = trialsSum/numTrials;
+        end
+    end
+end
+% to check when variability goes down, we will start at 500,500 and go
+% down sequentially. We will also change matrix size.
+
+% I need to show, through my numerical experiments that we can't do much
+% better than within 10.
+
     % TODO:
+    % plot from Ubaru's theoretical result.
     % 1. how much variability until we control error?
     % 3. conditioning on M instead of kernel matrix.
     % 4. Look at the J. Tropp X-Trace paper.
@@ -80,4 +112,3 @@ for ii=1:length(nArr)
     % 7. Find good log(det()) code.
     % 8. Functions of Matrices J. Higham (f(A)b problem)
     % 9. Try this with an actual kernel.
-end
