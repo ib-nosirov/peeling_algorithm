@@ -1,13 +1,15 @@
 % Test MakeHODLRMtrx
 close all;
-nArr = [1024,2048,4096,8192];
-mArr = 10; % we start seeing 2 orders of magnitude dropoff when m < 300.
-nvArr= 100; % not much of a difference, nv > m, but m should also be large.
-numTrials = 1;
+nArr = [128]; % increase this for speed test.
+mArr = 10:10:100; % we start seeing 2 orders of magnitude dropoff when m < 300.
+nvArr= 10:10:100; % not much of a difference, nv > m, but m should also be large.
+numTrials = 5;
+accuracy = zeros(length(mArr),length(nvArr));
 % need more samples to know for sure.
 data = zeros(length(nArr),length(mArr),length(nvArr));
 for ii=1:length(nArr)
-	n = nArr(ii); d=1; diagSize=130; r=4; I=[1 n^d];
+	n = nArr(ii); d=1; diagSize=16; r=4; I=[1 n^d]; % reconstruction error is governed by rank.
+    fprintf('Matrix size %d\n',n)
 	M = randn(n,10);
     M = M*M';
     M = M + 1e-3*eye(n);
@@ -50,7 +52,7 @@ for ii=1:length(nArr)
 		f = table(idxTree.get(it(idx+offset))).Var1(2);
 		kApprox(s:f,s:f) = leavesCell{idx};
     end
-    % reconstruct matrix by matrix multiply. Fails
+    % reconstruct matrix by matrix multiply
     kApproxMatVec = HODLRMatVec(K,eye(n));
 
 	%relativeReconstructionError = abs(norm(M-kApprox,'fro')/norm(M,'fro'))
@@ -78,24 +80,25 @@ for ii=1:length(nArr)
             trialsSum = 0;
             for ll=1:numTrials
             % Test HODLR-SLQ and SLQ
-            tic
+            %tic
             MATLAB_Gamma = trace(logm(M));
-            toc
-            tic
-            SLQ_Gamma = SLQ(kMtrxFcn,n,@log,mArr(jj),nvArr(kk));
-            toc
-            MATLAB_Gamma-SLQ_Gamma
-            tic
+            %toc
+            %tic
+            %SLQ_Gamma = SLQ(kMtrxFcn,n,@log,mArr(jj),nvArr(kk));
+            %toc
+            %MATLAB_Gamma-SLQ_Gamma
+            %tic
             HODLR_Gamma = SLQ(@(b) HODLRMatVec(K,b),n,@log,mArr(jj), ...
             nvArr(kk));
-            toc
-            MATLAB_Gamma-HODLR_Gamma
-            %trialsSum = trialsSum + abs(MATLAB_Gamma-HODLR_Gamma);
+            %toc
+            trialsSum = trialsSum + abs(MATLAB_Gamma-HODLR_Gamma);
             end
-            data(ii,jj,kk) = trialsSum/numTrials;
+            accuracy(jj,kk) = trialsSum/numTrials;
         end
     end
 end
+figure(1)
+imagesc(accuracy)
 % to check when variability goes down, we will start at 500,500 and go
 % down sequentially. We will also change matrix size.
 
