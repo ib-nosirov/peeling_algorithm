@@ -1,8 +1,8 @@
 % Test MakeHODLRMtrx
 close all;
 nArr = [128]; % increase this for speed test.
-mArr = 10:10:100; % we start seeing 2 orders of magnitude dropoff when m < 300.
-nvArr= 10:10:100; % not much of a difference, nv > m, but m should also be large.
+mArr = 10; % we start seeing 2 orders of magnitude dropoff when m < 300.
+nvArr= 100; % not much of a difference, nv > m, but m should also be large.
 numTrials = 5;
 accuracy = zeros(length(mArr),length(nvArr));
 % need more samples to know for sure.
@@ -75,13 +75,14 @@ for ii=1:length(nArr)
     relativeLanczosError = abs(norm(exactLanczos-approxLanczos,'fro') ...
         /norm(exactLanczos,'fro'));
  %%
+    MATLAB_Gamma = trace(logm(M));
     for jj=1:length(mArr)
         for kk=1:length(nvArr)
             trialsSum = 0;
             for ll=1:numTrials
             % Test HODLR-SLQ and SLQ
             %tic
-            MATLAB_Gamma = trace(logm(M));
+            %MATLAB_Gamma = trace(logm(M));
             %toc
             %tic
             %SLQ_Gamma = SLQ(kMtrxFcn,n,@log,mArr(jj),nvArr(kk));
@@ -115,3 +116,6 @@ imagesc(accuracy)
     % 7. Find good log(det()) code.
     % 8. Functions of Matrices J. Higham (f(A)b problem)
     % 9. Try this with an actual kernel.
+
+    % TODO:
+    % 1. Try to replicate Ubaru results.

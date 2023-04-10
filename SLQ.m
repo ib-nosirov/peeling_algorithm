@@ -5,6 +5,7 @@ for ii=1:nv
     % make a Rademacher random variable.
     v = 2*round(rand(n,1))-1;
     v = v/norm(v);
+    % replace with f, so no Lanczos; only test v.
     T = Lanczos(linearOperator,v,m);
     [Y,Theta] = eig(T);
     theta = diag(Theta);
