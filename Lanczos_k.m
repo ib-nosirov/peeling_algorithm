@@ -1,24 +1,19 @@
-% Matlab code LanczosFullReorthog.m
-% For "Applied Numerical Linear Algebra",  Chapter 7, section 3
-% Written by James Demmel, Jun  6, 1997
+function [T,V,w] = Lanczos_k(A,v0,k)
 %
-% Perform Lanczos with complete reorthogonalization
-function [T,v,w] = Lanczos(linearOperator,v0,k)
-	%
 % k-step basic Lanczos iteration
 %
 % usage:    [T,V,w] = Lanczos_k(A,v0,k)
 t  = norm(v0,2);
   v  =  v0/t; 
   beta = 0; 
-  V = [v]; 
+  V = [v];
   vold = v;
 %%-------------------- for stopping -- 
   orthTol = 1.e-08;
   wn = 0.0 ;
 %%-------------------- main loopLanSVD.m
  for j=1:k
-    w = linearOperator(v); 
+    w = A*v; 
     w = w - beta*vold ; 
     alpha = w'*v; 
     wn = wn + alpha*alpha;
