@@ -89,12 +89,12 @@ for ii=1:length(nArr)
             %toc
             %MATLAB_Gamma-SLQ_Gamma
             %tic
-            HODLR_Gamma = SLQ(@(b) HODLRMatVec(K,b),n,@log,mArr(jj), ...
+            HODLR_Gamma = SLQ(@(b) HODLRMatVec(K,b),@log,n,mArr(jj), ...
             nvArr(kk));
             %toc
             trialsSum = trialsSum + abs(MATLAB_Gamma-HODLR_Gamma);
             end
-            accuracy(jj,kk) = trialsSum/numTrials;
+            accuracy(jj,kk) = table(trialsSum/numTrials).Var1(end);
         end
     end
 end

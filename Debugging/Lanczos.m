@@ -1,7 +1,3 @@
-% Matlab code LanczosFullReorthog.m
-% For "Applied Numerical Linear Algebra",  Chapter 7, section 3
-% Written by James Demmel, Jun  6, 1997
-%
 % Perform Lanczos with complete reorthogonalization
 function [T,v,w] = Lanczos(linearOperator,v0,k)
 	%
