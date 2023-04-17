@@ -61,6 +61,6 @@ for ii=1:length(nArr)
     
     % Test HODLR-SLQ and SLQ
     MATLAB_Gamma = trace(logm(M))
-    HODLR_Gamma = HODLR_SLQ(K,n,@log,50,10)
-    SLQ_Gamma = SLQ(kMtrxFcn,n,@log,50,10)
+    HODLR_Gamma = HODLR_SLQ(K,n,@log,50,100)
+    SLQ_Gamma = SLQ(kMtrxFcn,n,@log,50,100)
 end

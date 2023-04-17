@@ -107,15 +107,7 @@ imagesc(accuracy)
 % better than within 10.
 
     % TODO:
-    % plot from Ubaru's theoretical result.
-    % 1. how much variability until we control error?
-    % 3. conditioning on M instead of kernel matrix.
-    % 4. Look at the J. Tropp X-Trace paper.
-    % 5. how small can the matrix be (can we validate against MATLAB)?
     % 6. fix the zero-padding issues (U matrix inside of MakeHODLRMatrix)
-    % 7. Find good log(det()) code.
     % 8. Functions of Matrices J. Higham (f(A)b problem)
-    % 9. Try this with an actual kernel.
-
     % TODO:
     % 1. Try to replicate Ubaru results.

@@ -1,4 +1,4 @@
-function [ld,z1] = SLQ(linearOperator,n,m,nvecs)
+function [ld,z1] = SLQ(linearOperator,f,n,m,nvecs)
 %% function ld = Lanc_Quad_LogDet( A, m, nvecs)
 % The function computes an approximate log-determinant of PSD matrix A
 % using the Stochastic Lanczos Quadrature Approximation
@@ -12,21 +12,18 @@ function [ld,z1] = SLQ(linearOperator,n,m,nvecs)
 
 
 	%% Initialization
-
 	cnt_est=0;
-
 	%% Main loop
 	for ii = 1:nvecs
 		w = sign(randn(n,1)); % Random radamacher vector
 		v0 = w /norm(w);
-		[H,V,f] = Lanczos(linearOperator,v0,m); % m steps of Lanczos algorithm
+		[H,V,g] = Lanczos(linearOperator,v0,m); % m steps of Lanczos algorithm
 		%H = (H+H')/2;
 		[eigvec,D]=eig(H);
 		theta  = abs(diag(D));
 		gamma2 = eigvec(1,:).^2;
-
 		%% sum of gamma2*log(theta)
-		count=sum(gamma2'.*(log(theta)));
+		count=sum(gamma2'.*(f(theta)));
 		z1(ii) = (count)*n;
 		cnt_est = (cnt_est+count);
 		zz(ii) = n*(cnt_est/ii);

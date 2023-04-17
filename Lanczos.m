@@ -22,7 +22,7 @@ t  = norm(v0,2);
     w = w - beta*vold ; 
     alpha = w'*v; 
     wn = wn + alpha*alpha;
-    T(j,j) = alpha; 
+    T(j,j) = alpha;
     w = w - alpha*v;
 %%-------------------- full reorthogonalization
     t1 = V'*w;
