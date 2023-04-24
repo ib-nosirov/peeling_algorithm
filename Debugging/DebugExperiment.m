@@ -1,6 +1,6 @@
 % Test MakeHODLRMtrx
 close all;
-nArr = [128]; % increase this for speed test.
+nArr = [1024,round(sqrt(102158))]; % increase this for speed test.
 mArr = 10; % we start seeing 2 orders of magnitude dropoff when m < 300.
 nvArr= 100; % not much of a difference, nv > m, but m should also be large.
 numTrials = 5;
@@ -8,11 +8,7 @@ accuracy = zeros(length(mArr),length(nvArr));
 % need more samples to know for sure.
 data = zeros(length(nArr),length(mArr),length(nvArr));
 for ii=1:length(nArr)
-	n = nArr(ii); d=1; diagSize=16; r=4; I=[1 n^d]; % reconstruction error is governed by rank.
-    fprintf('Matrix size %d\n',n)
-	M = randn(n,10);
-    M = M*M';
-    M = M + 1e-3*eye(n);
+	n = nArr(ii); d=1; diagSize=130; r=5; I=[1 n]; % reconstruction error is governed by rank.
 	%kMtrxFcn = @(b) M*b;
     
 	% Point evals at which to sample
@@ -65,7 +61,7 @@ for ii=1:length(nArr)
     yApprox = HODLRMatVec(K,b);
     yExact = M*b;
     matVecRelativeError = abs(norm(yExact-yApprox,'fro')/ ...
-        norm(yExact,'fro'));
+        norm(yExact,'fro'))
 %%
     % Test Lanczos and HODLR-Lanczos % Relative error of 1.00e-14.
     q = randn(n,1);
@@ -73,7 +69,7 @@ for ii=1:length(nArr)
     exactLanczos = Lanczos(kMtrxFcn,q,m);
     approxLanczos = Lanczos(@(b) HODLRMatVec(K,b),q,m);
     relativeLanczosError = abs(norm(exactLanczos-approxLanczos,'fro') ...
-        /norm(exactLanczos,'fro'));
+        /norm(exactLanczos,'fro'))
  %%
     MATLAB_Gamma = trace(logm(M));
     for jj=1:length(mArr)
@@ -94,7 +90,7 @@ for ii=1:length(nArr)
             %toc
             trialsSum = trialsSum + abs(MATLAB_Gamma-HODLR_Gamma);
             end
-            accuracy(jj,kk) = table(trialsSum/numTrials).Var1(end);
+            accuracy(jj,kk) = table(trialsSum/numTrials).Var1(end)
         end
     end
 end

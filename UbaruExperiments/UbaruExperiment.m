@@ -4,13 +4,13 @@ A = Problem.A;
 kMtrxFcn = @(b) A*b;
 n=102158;
 d=1;
-r=5;
+k=5;
 diagSize=150;
-m=55;
+m=50;
 nvecs=100;
-I=[1 n^d];
+I=[1 n];
 %%
-%K = MakeHODLRMtrx(kMtrxFcn,n^d,r,diagSize,I);
+K = MakeHODLRMtrx(kMtrxFcn,n,k,diagSize,I);
 % 	% reconstruct the K matrix approximation from U and Z values
 % 	kApprox = zeros(n,n);
 % 	uTree = K{1};
@@ -40,9 +40,9 @@ I=[1 n^d];
 % %MATLAB_Gamma = trace(logm(A))
 %%
 % rng(1);
-[ldUbaru,z1] = Lanc_Quad_LogDet(A,m,nvecs);
-%[hodlr_ld,z1] = SLQ(@(b) HODLRMatVec(K,b),n,m,nvecs);
-[ld,z1] = SLQ(kMtrxFcn,@log,n,m,nvecs);
+%[ldUbaru,z1] = Lanc_Quad_LogDet(A,m,nvecs);
+[hodlr_ld,z1] = SLQ(@(b) HODLRMatVec(K,b),n,m,nvecs);
+%[ld,z1] = SLQ(kMtrxFcn,@log,n,m,nvecs);
 figure()
 hold on
 for ii=1:3

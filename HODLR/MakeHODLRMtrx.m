@@ -23,10 +23,20 @@ function output = MakeHODLRMtrx(kMtrxFcn,n,k,diagSize,I)
 		U2 = orth(Y(1:n/2,1:k)); U3 = orth(Y((n/2)+1:end,k+1:end));
 		uMtrx = zeros(n,2*k);
 		% interlace in the opposite order (Fig 13).
-		uMtrx(1:n/2,k+1:end) = U2; uMtrx((n/2)+1:end,1:k) = U3;
+        U2Rank = size(U2,2);
+        U3Rank = size(U3,2);
+        U2 = [U2,zeros(n/2,k-U2Rank)];
+        U3 = [U3,zeros(n/2,k-U3Rank)];
+		uMtrx(1:n/2,k+1:end) = U2;
+        uMtrx((n/2)+1:end,1:k) = U3;
         % need an optional input that allows for adjoint
 		zMtrx = kMtrxFcn(uMtrx);
+        % zero padding
 		Z2 = zMtrx(1:n/2,1:k); Z3 = zMtrx((n/2)+1:end,k+1:end);
+        Z2Rank = size(Z2,2);
+        Z3Rank = size(Z3,2);
+        Z2 = [Z2,zeros(n/2,k-Z2Rank)];
+        Z3 = [Z3,zeros(n/2,k-Z3Rank)];
 		uTree = uTree.set(2,U2); zTree = zTree.set(2,Z2);
 		uTree = uTree.set(3,U3); zTree = zTree.set(3,Z3);
 	end
@@ -49,6 +59,10 @@ function output = MakeHODLRMtrx(kMtrxFcn,n,k,diagSize,I)
 			U2 = Y(s2:f2,k+1:end);
 			U1 = orth(U1 - computeResidual(uTree,zTree,[s1 f1],omega,0));
 			U2 = orth(U2 - computeResidual(uTree,zTree,[s2 f2],omega,0));
+            U1Rank = size(U1,2);
+            U2Rank = size(U2,2);
+            U1 = [U1,zeros(f1-s1+1,k-U1Rank)];
+            U2 = [U2,zeros(f2-s2+1,k-U2Rank)];
 			uMtrx(s1:f1,k+1:end) = U1;
 			uMtrx(s2:f2,1:k) = U2;
 			itIdx = itIdx+2;
@@ -59,9 +73,14 @@ function output = MakeHODLRMtrx(kMtrxFcn,n,k,diagSize,I)
 		itIdx = startIdx-1;
 		for idx = 2:2:length(idxCell) 
 			[s1,f1,s2,f2] = getIntervals(idxCell,idx);
-			Z1 = zMtrx(s1:f1,1:k); Z2 = zMtrx(s2:f2,k+1:end);
+			Z1 = zMtrx(s1:f1,1:k);
+            Z2 = zMtrx(s2:f2,k+1:end);
 			Z1 = Z1 - computeResidual(zTree,uTree,[s1 f1],uMtrx,0);
 			Z2 = Z2 - computeResidual(zTree,uTree,[s2 f2],uMtrx,0);
+            Z1Rank = size(Z1,2);
+            Z2Rank = size(Z2,2);
+            Z1 = [Z1,zeros(n/2,k-Z1Rank)];
+            Z2 = [Z2,zeros(n/2,k-Z2Rank)];
 			itIdx = itIdx+2;
 			zTree = zTree.set(it(itIdx-1),Z1);
 			zTree = zTree.set(it(itIdx),Z2);
@@ -106,7 +125,7 @@ function output = MakeHODLRMtrx(kMtrxFcn,n,k,diagSize,I)
 				f3 = k;
 			elseif ~isLeaf
 				s3 = k+1;
-			end
+            end
 			B = B+mtrx1(s1:f1,:)*(mtrx2'*randMtrx(s2:f2,s3:f3));
 		end
 	end
