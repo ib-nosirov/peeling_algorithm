@@ -88,6 +88,9 @@ function output = MakeHODLRMtrx(kMtrxFcn,n,k,diagSize,I)
 	end
 
 	function leavesCell = computeLeaves(generation)
+        % Debug
+        M = kMtrxFcn(eye(n));
+        % Debug
 		% stack (number of leaves) identity blocks:
 		idxCell = traverseLeafGeneration(idxTree,generation);
 		eyeBlockLen = table(idxCell{1}).Var1(2);
@@ -98,8 +101,10 @@ function output = MakeHODLRMtrx(kMtrxFcn,n,k,diagSize,I)
 		output = kMtrxFcn(eyeStack);
 		for idx = 2:2:eyeBlocksNum
 			[s1,f1,s2,f2] = getIntervals(idxCell,idx);
+            % the issue is with the computeResidual function.
 			leaf1 = output(s1:f1,:)-...
-					computeResidual(uTree,zTree,[s1 f1],eyeStack,1);
+					computeResidual(uTree,zTree,[s1 f1],eyeStack,1)
+
 			leaf2 = output(s2:f2,:)-...
 					computeResidual(uTree,zTree,[s2 f2],eyeStack,1);
 			leavesCell{idx-1} = leaf1;

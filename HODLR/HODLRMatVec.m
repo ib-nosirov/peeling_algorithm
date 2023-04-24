@@ -36,8 +36,7 @@ function y = HODLRMatVec(A,b)
         %figure(ii/2)
         %imagesc(y)
 	end
-	% leaves
-    
+	% leaves 
 	for ii = nonLeafNodes+1:numNodes
 		interval = idxTree.get(it(ii));
 		s = interval(1);

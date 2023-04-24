@@ -4,12 +4,12 @@
 close all;
 nArr = [1024,2048,4096];
 for ii=1:length(nArr)
-	n = nArr(ii); d=2; diagSize=130; r=10; I=[1 n];
+	n = nArr(ii); d=1; diagSize=130; r=10; I=[1 n];
     dim2Points = randn(n,2);
     rbfKernel = @(x,y) exp(-norm(x-y)^2);
     M = minDistance2dReordering(dim2Points,rbfKernel);
     M = tril(M)+tril(M,-1)';
-    imagesc(M)
+    %$imagesc(M);
     kMtrxFcn = @(b) M*b;
 	% Point evals at which to sample
 	%x = CreatePoints(n^d,d,'u');
@@ -17,6 +17,9 @@ for ii=1:length(nArr)
 	%DM = DistanceMatrix(x,x);
 	% sample matrix
 	%kMtrx = kMtrxFcn(ep,DM);
+
+    % make a cell array of the diagonals of M.
+
 
 	K = MakeHODLRMtrx(kMtrxFcn,n,r,diagSize,I);
 
@@ -42,6 +45,8 @@ for ii=1:length(nArr)
 		f = table(idxTree.get(it(idx+offset))).Var1(2);
 		kApprox(s:f,s:f) = leavesCell{idx};
     end
+    imagesc(kApprox-M)
+    keyboard
     % reconstruct matrix by matrix multiply
     kApproxMatVec = HODLRMatVec(K,eye(n));
     imagesc(kApproxMatVec)
@@ -59,7 +64,6 @@ for ii=1:length(nArr)
     matVecRelativeError = abs(norm(yExact-yApprox,'fro')/ ...
         norm(yExact,'fro'));
 	
-    
     % Test HODLRMatVec
     b = randn(n,1);
     yApprox = HODLRMatVec(K,b);
