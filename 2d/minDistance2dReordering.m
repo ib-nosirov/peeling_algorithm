@@ -11,10 +11,11 @@
 
 function HODLR_Mtrx = minDistance2dReordering(dim2Points,kMtrxFcn)
 HODLR_Mtrx = zeros(length(dim2Points));
+N = length(dim2Points);
 % pick the first element in a random set to be the focus point.
-focusPt = dim2Points(1:2,1);
+focusPt = dim2Points(1,:);
 % this point's distance will no longer be considered.
-validPoints = dim2Points(1:2,:);
+validPoints = dim2Points(2:end,:);
     for ii = 1:N-1
       %scatter(dim2Points(1,:),dim2Points(2,:),[],dim2Points(3,:))
       % compute distances from the focus point to every other point in the set.

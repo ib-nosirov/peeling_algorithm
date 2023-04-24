@@ -110,10 +110,11 @@ function output = MakeHODLRMtrx(kMtrxFcn,n,k,diagSize,I)
 			B = B+mtrx1(s1:f1,:)*(mtrx2'*randMtrx(s2:f2,s3:f3));
 		end
 	end
-
+% this function has bugs. f1 == 0 is a bad choice; should maybe be f1==1
 	function [s1,f1,s2,f2] = getAncestorIntervals(mtrx,currInterval,prevInterval)
 		s1 = mod(currInterval(1),length(mtrx));
 		f1 = mod(currInterval(2),length(mtrx));
+        %if s1 == 0, s1 = 1; end
 		if f1 == 0, f1 = length(mtrx);	end
 		% the columns of the previous block correspond to the rows of the
 		% skinny matrix, by definition of matrix multiplication.

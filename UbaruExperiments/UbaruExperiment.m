@@ -1,14 +1,15 @@
-load('../../data/qpband.mat')
+load('thermomech_TC.mat')
 A = Problem.A;
-A = A*A';
+%A = A*A';
 kMtrxFcn = @(b) A*b;
-n=20000;
+n=102158;
 d=1;
 r=5;
 diagSize=150;
 m=55;
 nvecs=100;
 I=[1 n^d];
+%%
 %K = MakeHODLRMtrx(kMtrxFcn,n^d,r,diagSize,I);
 % 	% reconstruct the K matrix approximation from U and Z values
 % 	kApprox = zeros(n,n);
@@ -37,13 +38,14 @@ I=[1 n^d];
 %     kApproxMatVec = HODLRMatVec(K,eye(n));
 %     norm(A-kApproxMatVec,'fro')/norm(A,'fro')
 % %MATLAB_Gamma = trace(logm(A))
+%%
 % rng(1);
 [ldUbaru,z1] = Lanc_Quad_LogDet(A,m,nvecs);
 %[hodlr_ld,z1] = SLQ(@(b) HODLRMatVec(K,b),n,m,nvecs);
-[ld,z1] = SLQ(kMtrxFcn,n,m,nvecs);
+[ld,z1] = SLQ(kMtrxFcn,@log,n,m,nvecs);
 figure()
 hold on
-for ii=1:30
+for ii=1:3
 [ldUbaru,z1] = Lanc_Quad_LogDet(A,m,nvecs);
 plot(ldUbaru)
 end
