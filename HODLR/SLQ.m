@@ -15,7 +15,8 @@ function [ld,z1] = SLQ(linearOperator,f,n,m,nvecs)
 	cnt_est=0;
 	%% Main loop
 	for ii = 1:nvecs
-		w = sign(randn(n,1)); % Random radamacher vector
+        w = double(1:n == ii)';
+		%w = sign(randn(n,1)); % Random radamacher vector
 		v0 = w /norm(w);
 		[H,V,g] = Lanczos(linearOperator,v0,m); % m steps of Lanczos algorithm
 		%H = (H+H')/2;

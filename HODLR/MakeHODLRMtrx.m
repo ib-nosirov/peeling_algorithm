@@ -103,7 +103,7 @@ function output = MakeHODLRMtrx(kMtrxFcn,n,k,diagSize,I)
 			[s1,f1,s2,f2] = getIntervals(idxCell,idx);
             % the issue is with the computeResidual function.
 			leaf1 = output(s1:f1,:)-...
-					computeResidual(uTree,zTree,[s1 f1],eyeStack,1)
+					computeResidual(uTree,zTree,[s1 f1],eyeStack,1);
 
 			leaf2 = output(s2:f2,:)-...
 					computeResidual(uTree,zTree,[s2 f2],eyeStack,1);
@@ -131,6 +131,7 @@ function output = MakeHODLRMtrx(kMtrxFcn,n,k,diagSize,I)
 			elseif ~isLeaf
 				s3 = k+1;
             end
+            tmp = B;
 			B = B+mtrx1(s1:f1,:)*(mtrx2'*randMtrx(s2:f2,s3:f3));
 		end
 	end
@@ -164,7 +165,7 @@ function output = MakeHODLRMtrx(kMtrxFcn,n,k,diagSize,I)
 		itArr = idxTree.depthfirstiterator;
 		for idx = 1:length(itArr)
 			if all(idxTree.get(itArr(idx)) == interval)
-				nodePath = idxTree.findpath(itArr(idx), 1);
+				nodePath = idxTree.findpath(itArr(idx),1);
 				nodePath = nodePath(1:end-1);
 				return
 			end

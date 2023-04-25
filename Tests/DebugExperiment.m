@@ -1,7 +1,7 @@
 % Test MakeHODLRMtrx
 close all;
 nArr = [1024,round(sqrt(102158))]; % increase this for speed test.
-mArr = 10; % we start seeing 2 orders of magnitude dropoff when m < 300.
+m = 50; % we start seeing 2 orders of magnitude dropoff when m < 300.
 nvArr= 100; % not much of a difference, nv > m, but m should also be large.
 numTrials = 5;
 accuracy = zeros(length(mArr),length(nvArr));
@@ -15,6 +15,7 @@ for ii=1:length(nArr)
 	x = CreatePoints(n^d,d,'u');
 	% compute the absolute difference
 	DM = DistanceMatrix(x,x);
+    % C6 Matern.
     kernel = @(e,r) (1+e*r+2/5*(e*r).^2+1/15*(e*r).^3).*exp(-e*r); ep=10; d=1;
     M = kernel(ep,DM);
     M = M + 1e-1*eye(n);
@@ -42,11 +43,14 @@ for ii=1:length(nArr)
 		f2 = table(idxTree.get(it(idx))).Var1(2);
 		kApprox(s1:f1,s2:f2) = uTree.get(it(idx-1)) * zTree.get(it(idx))';
 		kApprox(s2:f2,s1:f1) = uTree.get(it(idx)) * zTree.get(it(idx-1))';
+        rank(M(s1:f1,s2:f2))
+        rank(M(s2:f2,s1:f1))
     end
     for idx=1:length(leavesCell)
 		s = table(idxTree.get(it(idx+offset))).Var1(1);
 		f = table(idxTree.get(it(idx+offset))).Var1(2);
 		kApprox(s:f,s:f) = leavesCell{idx};
+        rank(M(s:f,s:f))
     end
     % reconstruct matrix by matrix multiply
     kApproxMatVec = HODLRMatVec(K,eye(n));
@@ -65,7 +69,6 @@ for ii=1:length(nArr)
 %%
     % Test Lanczos and HODLR-Lanczos % Relative error of 1.00e-14.
     q = randn(n,1);
-    m = 10;
     exactLanczos = Lanczos(kMtrxFcn,q,m);
     approxLanczos = Lanczos(@(b) HODLRMatVec(K,b),q,m);
     relativeLanczosError = abs(norm(exactLanczos-approxLanczos,'fro') ...
@@ -85,17 +88,25 @@ for ii=1:length(nArr)
             %toc
             %MATLAB_Gamma-SLQ_Gamma
             %tic
-            HODLR_Gamma = SLQ(@(b) HODLRMatVec(K,b),@log,n,mArr(jj), ...
-            nvArr(kk));
+            HODLR_Gamma = SLQ(@(b) HODLRMatVec(K,b),@log,n,m,n);
             %toc
             trialsSum = trialsSum + abs(MATLAB_Gamma-HODLR_Gamma);
             end
             accuracy(jj,kk) = table(trialsSum/numTrials).Var1(end)
         end
     end
+    figure()
+hold on
+for jj=1:5
+[ld,z1] = SLQ(kMtrxFcn,@log,n,m,n);
+ld(end)
+plot(ld)
+end
+hold off
 end
 figure(1)
 imagesc(accuracy)
+
 % to check when variability goes down, we will start at 500,500 and go
 % down sequentially. We will also change matrix size.
 
