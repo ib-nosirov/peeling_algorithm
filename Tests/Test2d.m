@@ -65,7 +65,6 @@ figure()
         tmp = M(s2:f2,s1:f1);
         tmp = tmp - mean(tmp(:));
         semilogy(svd(tmp))
-keyboard
         %plot(real(fft(tmp(:))))
     end
     for idx=1:length(leavesCell)
@@ -84,11 +83,6 @@ keyboard
     kApproxMatVec = HODLRMatVec(K,eye(n));
     imagesc(kApproxMatVec)
 	imagesc(M-kApproxMatVec)
-
-	%relativeReconstructionError = abs(norm(M-kApprox,'fro')/norm(M,'fro'))
-	%figure(ii)
-	%imagesc(abs(M-kApprox)./abs(M))
-    %colorbar
     
     % Test HODLRMatVec    
     b = randn(n,1);
@@ -119,3 +113,4 @@ end
 % compare against MATLAB's reorderings.
 % run the numerical experiments
 % for 1d and 2d, bump the eigenvalues.
+% plug in and check against XTrace.

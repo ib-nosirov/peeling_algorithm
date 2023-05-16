@@ -2,7 +2,8 @@ function output = MakeHODLRMtrx(kMtrxFcn,n,k,diagSize,I)
 	% initialize index tree.
 	idxTree = tree(I);
 	idxTree = createChildren(idxTree,1,diagSize);
-	uTree = idxTree; zTree = idxTree;
+	uTree = idxTree;
+    zTree = idxTree;
 	% main
 	computeFirstGeneration();
 	treeDepth = floor(log2(nnodes(idxTree)+1));
@@ -17,26 +18,31 @@ function output = MakeHODLRMtrx(kMtrxFcn,n,k,diagSize,I)
 	function computeFirstGeneration()
 		% reference: PG. Martinsson, J. Tropp, 2020: pg 100-101
 		% randomly sample the largest blocks of the matrix.
+        numRowsTop = ceil(n/2);
+        numRowsBot = n - numRowsTop;
 		omega = randn(n,2*k);
-		omega(1:n/2,1:k) = 0; omega((n/2)+1:end,k+1:end) = 0;
+		omega(1:numRowsTop,1:k) = 0;
+        omega(numRowsTop+1:end,k+1:end) = 0;
 		Y = kMtrxFcn(omega);
-		U2 = orth(Y(1:n/2,1:k)); U3 = orth(Y((n/2)+1:end,k+1:end));
+		U2 = orth(Y(1:numRowsTop,1:k));
+        U3 = orth(Y(numRowsTop+1:end,k+1:end));
 		uMtrx = zeros(n,2*k);
 		% interlace in the opposite order (Fig 13).
         U2Rank = size(U2,2);
         U3Rank = size(U3,2);
-        U2 = [U2,zeros(n/2,k-U2Rank)];
-        U3 = [U3,zeros(n/2,k-U3Rank)];
-		uMtrx(1:n/2,k+1:end) = U2;
-        uMtrx((n/2)+1:end,1:k) = U3;
+        U2 = [U2,zeros(numRowsTop,k-U2Rank)];
+        U3 = [U3,zeros(numRowsBot,k-U3Rank)];
+		uMtrx(1:numRowsTop,k+1:end) = U2;
+        uMtrx(numRowsTop+1:end,1:k) = U3;
         % need an optional input that allows for adjoint
 		zMtrx = kMtrxFcn(uMtrx);
         % zero padding
-		Z2 = zMtrx(1:n/2,1:k); Z3 = zMtrx((n/2)+1:end,k+1:end);
+		Z2 = zMtrx(1:numRowsTop,1:k);
+        Z3 = zMtrx(numRowsTop+1:end,k+1:end);
         Z2Rank = size(Z2,2);
         Z3Rank = size(Z3,2);
-        Z2 = [Z2,zeros(n/2,k-Z2Rank)];
-        Z3 = [Z3,zeros(n/2,k-Z3Rank)];
+        Z2 = [Z2,zeros(numRowsTop,k-Z2Rank)];
+        Z3 = [Z3,zeros(numRowsBot,k-Z3Rank)];
 		uTree = uTree.set(2,U2); zTree = zTree.set(2,Z2);
 		uTree = uTree.set(3,U3); zTree = zTree.set(3,Z3);
 	end
@@ -89,8 +95,6 @@ function output = MakeHODLRMtrx(kMtrxFcn,n,k,diagSize,I)
 
 	function leavesCell = computeLeaves(generation)
         % Debug
-        M = kMtrxFcn(eye(n));
-        % Debug
 		% stack (number of leaves) identity blocks:
 		idxCell = traverseLeafGeneration(idxTree,generation);
 		eyeBlockLen = table(idxCell{1}).Var1(2);
@@ -126,12 +130,14 @@ function output = MakeHODLRMtrx(kMtrxFcn,n,k,diagSize,I)
 												prevInterval);
 			s3 = 1;
 			f3 = table(size(randMtrx)).Var1(2);
-			if ~isLeaf && isUpperTriangleBlock(nodePath(1))
+            if ~isLeaf && isUpperTriangleBlock(nodePath(1))
 				f3 = k;
 			elseif ~isLeaf
 				s3 = k+1;
             end
-            tmp = B;
+            lenDiff = length(mtrx2') - length(randMtrx(s2:f2,s3:f3));
+            % there are two instances: mtrx2 > randMtrx
+            % randMtrx < mtrx2; we should default to randMtrx size
 			B = B+mtrx1(s1:f1,:)*(mtrx2'*randMtrx(s2:f2,s3:f3));
 		end
 	end

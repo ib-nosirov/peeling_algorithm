@@ -37,13 +37,16 @@ function str = contentToString(content)
             
         else
             % Matrix -> print its size
-            dims = size(content);
+            %dims = size(content);
+            dims = content;
             str = '<';
             for d = dims
                 str = [ str num2str(d) 'x' ]; %#ok<AGROW>
-            end
-            str(end) = ' ';
-            str = [str class(content(1)) '>' ];
+            end            
+            str(end) = '';
+            %str(end) = ' ';
+            %str = [str class(content(1)) '>' ];
+            str = [str '>' ];
         end
     else
         % A string -> print it

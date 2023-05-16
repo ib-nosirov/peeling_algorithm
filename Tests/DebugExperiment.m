@@ -1,14 +1,14 @@
 % Test MakeHODLRMtrx
 close all;
 nArr = [1024,round(sqrt(102158))]; % increase this for speed test.
-m = 50; % we start seeing 2 orders of magnitude dropoff when m < 300.
+mArr = 50; % we start seeing 2 orders of magnitude dropoff when m < 300.
 nvArr= 100; % not much of a difference, nv > m, but m should also be large.
 numTrials = 5;
 accuracy = zeros(length(mArr),length(nvArr));
 % need more samples to know for sure.
 data = zeros(length(nArr),length(mArr),length(nvArr));
-for ii=1:length(nArr)
-	n = nArr(ii); d=1; diagSize=130; r=5; I=[1 n]; % reconstruction error is governed by rank.
+for n=nArr
+	d=1; diagSize=130; r=5; I=[1 n]; % reconstruction error is governed by rank.
 	%kMtrxFcn = @(b) M*b;
     
 	% Point evals at which to sample
@@ -55,7 +55,8 @@ for ii=1:length(nArr)
     % reconstruct matrix by matrix multiply
     kApproxMatVec = HODLRMatVec(K,eye(n));
 
-	%relativeReconstructionError = abs(norm(M-kApprox,'fro')/norm(M,'fro'))
+	%
+    relativeReconstructionError = abs(norm(M-kApprox,'fro')/norm(M,'fro'))
 	%figure(ii)
 	%imagesc(abs(M-kApprox)./abs(M))
     %colorbar
@@ -112,9 +113,3 @@ imagesc(accuracy)
 
 % I need to show, through my numerical experiments that we can't do much
 % better than within 10.
-
-    % TODO:
-    % 6. fix the zero-padding issues (U matrix inside of MakeHODLRMatrix)
-    % 8. Functions of Matrices J. Higham (f(A)b problem)
-    % TODO:
-    % 1. Try to replicate Ubaru results.

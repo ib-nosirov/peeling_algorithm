@@ -33,11 +33,10 @@ function y = HODLRMatVec(A,b)
 		z2 = zTree.get(it(ii));
 		y(s1:f1,:) = y(s1:f1,:) + u1*(z1'*b(s2:f2,:));
         y(s2:f2,:) = y(s2:f2,:) + u2*(z2'*b(s1:f1,:));
-        %figure(ii/2)
-        %imagesc(y)
+
 	end
 	% leaves 
-	for ii = nonLeafNodes+1:numNodes
+    for ii = nonLeafNodes+1:numNodes
 		interval = idxTree.get(it(ii));
 		s = interval(1);
         f = interval(2);

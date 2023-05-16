@@ -1,4 +1,5 @@
 %% write a set of 10 tests for different sizes and kinds of matrices.
+numTests = 10
 fprintf('MakeHODLRatrix_test: \n')
 for ii = 1:numTests
     fprintf('Test No. %d\n',ii)
