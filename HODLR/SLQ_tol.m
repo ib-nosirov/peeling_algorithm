@@ -1,9 +1,10 @@
-function [ld,z1] = SLQ(linearOperator,f,n,m,nvecs)
+function [gamma,ii] = SLQ_tol(linearOperator,f,n,m,tol,groundTruth)
 %% function ld = Lanc_Quad_LogDet( A, m, nvecs)
 % The function computes an approximate log-determinant of PSD matrix A
 % using the Stochastic Lanczos Quadrature Approximation
 %-- Inputs
-% A - the symmetric positive definite input matrix
+% linearOperator - a hodlr matrix multiply function
+% n = 
 % m - Number of Lanczos steps (degree)
 % nvecs - Number of starting vectors
 %-- Output
@@ -12,21 +13,27 @@ function [ld,z1] = SLQ(linearOperator,f,n,m,nvecs)
 
 
 	%% Initialization
-	cnt_est=0;
+	cntEst = 0;
 	%% Main loop
-	for ii = 1:nvecs
-        %w = double(1:n == ii)';
-		w = sign(randn(n,1)); % Random radamacher vector
+    ii = 1;
+    gamma = 0;
+	while abs(groundTruth - gamma) > tol && ii < 3*n/10
+        if mod(ii,n/10) == 0 
+            cnEst = 0;
+            ii = 1;
+            gamma = 0;
+        end
+		w = sign(randn(n,1)); % Random rademacher vector
 		v0 = w /norm(w);
 		[H,V,g] = Lanczos(linearOperator,v0,m); % m steps of Lanczos algorithm
 		%H = (H+H')/2;
 		[eigvec,D]=eig(H);
 		theta  = abs(diag(D));
-		gamma2 = eigvec(1,:).^2;
-		%% sum of gamma2*log(theta)
-		count=sum(gamma2'.*(f(theta)));
-		z1(ii) = (count)*n;
-		cnt_est = (cnt_est+count);
-		zz(ii) = n*(cnt_est/ii);
-	end
-	ld=zz;
+		gamma = eigvec(1,:).^2;
+		% sum of gamma2*log(theta)
+		count = sum(gamma'.*(f(theta)));
+		cntEst = (cntEst+count);
+		gamma = n*(cntEst/ii);
+		ii = ii+1;
+    end
+end

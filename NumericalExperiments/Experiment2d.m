@@ -13,8 +13,7 @@ SLQ_reord_HODLR_time = zeros(length(nArr),1);
 SLQ_K_HODLR_time = zeros(length(nArr),1);
 SLQ_K_time = zeros(length(nArr),1);
 
-for ii=1:length(nArr)
-n=nArr(ii);
+for n=nArr
 dim2Points = randn(n,2);
 DM = real(DistanceMatrix(dim2Points,dim2Points));
 % Create kernel matrix

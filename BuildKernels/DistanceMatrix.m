@@ -19,5 +19,4 @@
   DM = repmat(sum(dsites.*dsites,2),1,N) + ...
        repmat((sum(ctrs.*ctrs,2))',M,1) - ...
        2*dsites*ctrs';
-  DM = sqrt(DM);
-  
+  DM = real(sqrt(DM));

@@ -3,26 +3,32 @@
 % Test MakeHODLRMtrx
 close all;
 nArr = [1024,2048,4096];
-for ii=1:length(nArr)
-	n = nArr(ii); d=1; diagSize=130; r=10; I=[1 n];
+for n = nArr
+	d=1;
+    diagSize=130;
+    r=10; I=[1 n];
     dim2Points = randn(n,2);
-    radiusVec = dim2Points - dim2Points;
-    rbfKernel = @(x,y) exp(-norm(x-y)^2);
+    kernel = @(e,r) (1+e*r+2/5*(e*r).^2+1/15*(e*r).^3).*exp(-e*r);
     nonReorderMtrx = zeros(n);
+    ep = 10;
     for kk=1:n
         for jj=1:n
-            nonReorderMtrx(kk,jj) = rbfKernel(dim2Points(kk,:),dim2Points(jj,:));
+            nonReorderMtrx(kk,jj) = kernel(10,vecnorm(dim2Points(kk,:)-dim2Points(jj,:)));
         end
     end
+    figure()
     semilogy(svd(nonReorderMtrx))
+    figure()
     imagesc(nonReorderMtrx)
     %%
-    M = minDistance2dReordering(dim2Points,rbfKernel);
-    M = M./(1e-6 + vecnorm(M));
+    M = minDistance2dReordering(dim2Points,kernel,ep,nonReorderMtrx);
+   % M = M./(1e-6 + vecnorm(M));
+    figure()
+    imagesc(M)
+    sort(eig(nonReorderMtrx))-sort(eig(M))
     %M = M + rot90(M,2);
     %M = tril(M)+tril(M,-1)';
     %M = M - mean(M(:));
-    imagesc(M)
 
     %$imagesc(M);
     kMtrxFcn = @(b) M*b;

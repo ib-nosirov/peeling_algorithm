@@ -10,10 +10,7 @@
 % Output: a HODLR-type matrix
 % Create a 2d C6 Matern kernel
 
-%kernel = @(e,r) (1+e*r+2/5*(e*r).^2+1/15*(e*r).^3).*exp(-e*r); ep 10
-%dim2Points = randn(n,2);
-function [HODLR_Mtrx,focusPtIdx] = minDistance2dReordering(dim2Points,kMtrxFcn,ep)
-HODLR_Mtrx = zeros(length(dim2Points));
+function [HODLR_Mtrx,focusPtIdx] = minDistance2dReordering(dim2Points,kMtrxFcn,ep,HODLR_Mtrx)
 focusPtIdx = zeros(length(dim2Points),1);
 N = length(dim2Points);
 % pick the first element in a random set to be the focus point.
@@ -27,11 +24,14 @@ validPoints = dim2Points(2:end,:);
       % evaluate.
       validPoints = validPoints(distIdx,:);
       % evaluate the kernel against the focus point.
-      DM = DistanceMatrix(validPoints,focusPt);
-      rbfVector = kMtrxFcn(ep,DM);
-      HODLR_Mtrx(ii:N,ii) = rbfVector;
       focusPt = validPoints(end,:); % change the 1 to 'end' for maximin.
       validPoints = validPoints(1:N-ii,:);
-      focusPt(ii) = distIdx(end);
+      focusPtIdx(ii) = distIdx(end);
     end
+    HODLR_Mtrx = HODLR_Mtrx(focusPtIdx,focusPtIdx); % check that focusPtIdx has all of the indices.
+    % pick points that are far away from all points picked so far; current
+    % approach is too greedy.
+
+    % things to try: create a constellation of 5-6 points and work it out
+    % by hand.
 end
